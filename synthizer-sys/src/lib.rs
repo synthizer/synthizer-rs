@@ -1,4 +1,4 @@
-#![allow(non_camel_case_types)]
+#![allow(warnings)]
 mod synthizer;
 mod synthizer_constants;
 

@@ -1,5 +1,3 @@
-use cmake;
-
 fn main() {
     println!("cargo:rerun-if-changed=synthizer-vendored");
 
