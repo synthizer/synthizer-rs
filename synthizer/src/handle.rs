@@ -1,21 +1,20 @@
 use synthizer_sys::*;
 
+use crate::errors::*;
+
 pub struct Handle(pub(crate) syz_Handle);
 
-impl Clone for Handle {
-    fn clone(&self) -> Handle {
-        unsafe {
-            syz_handleIncRef(self.0);
-        }
-        Handle(self.0)
+impl Handle {
+    pub fn try_clone(&self) -> Result<Handle> {
+        check_error(unsafe { syz_handleIncRef(self.0) })?;
+        Ok(Handle(self.0))
     }
 }
 
 impl Drop for Handle {
     fn drop(&mut self) {
-        unsafe {
-            syz_handleDecRef(self.0);
-        }
+        check_error(unsafe { syz_handleDecRef(self.0) })
+            .expect("Dropping handles should not error");
     }
 }
 

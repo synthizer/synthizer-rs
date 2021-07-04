@@ -6,7 +6,6 @@ use crate::events;
 use crate::handle::*;
 
 /// The `Context` represents an audio device.
-#[derive(Clone)]
 pub struct Context(pub(crate) Handle);
 
 impl Context {
@@ -14,6 +13,10 @@ impl Context {
         let mut h = 0;
         check_error(unsafe { syz_createContext(&mut h as *mut syz_Handle) })?;
         Ok(Context(Handle(h)))
+    }
+
+    pub fn try_clone(&self) -> Result<Context> {
+        Ok(Context(self.0.try_clone()?))
     }
 
     pub fn enable_events(&self) -> Result<()> {
