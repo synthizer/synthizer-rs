@@ -1,8 +1,6 @@
-// temporary: bindgen generates a lot of warnings until we've bootstrapped everything.
-#![allow(dead_code, unused_imports)]
+#![allow(non_camel_case_types)]
+mod synthizer;
+mod synthizer_constants;
 
-mod bindgen;
-
-pub fn test() -> bool {
-    true
-}
+pub use synthizer::*;
+pub use synthizer_constants::*;
