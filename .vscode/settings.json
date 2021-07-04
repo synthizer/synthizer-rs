@@ -1,4 +1,3 @@
 {
-    "rust-analyzer.checkOnSave.command": "clippy",
     "files.eol": "\n"
 }
