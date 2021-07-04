@@ -52,3 +52,13 @@ pub(crate) fn error_from_code(code: syz_ErrorCode) -> Error {
         code,
     }
 }
+
+/// Return `Ok` if the error code is a success. Otherwise, convert to an error.
+/// Convenience helper to use `?` with Synthizer.
+pub(crate) fn check_error(code: syz_ErrorCode) -> Result<()> {
+    if code != 0 {
+        return Err(error_from_code(code));
+    }
+
+    Ok(())
+}
