@@ -1,9 +1,9 @@
 fn main() {
     println!("cargo:rerun-if-changed=synthizer-vendored");
 
-    let is_msvc = std::env::var("TARGET").unwrap().ends_with("msvc");
     let mut cfg = cmake::Config::new("synthizer-vendored");
-    if is_msvc {
+
+    #[cfg(target_env="msvc")] {
         cfg.cxxflag("/EHsc");
         // At the moment Rust always links the release version of the MSVC
         // runtime: https://github.com/rust-lang/rust/issues/39016 This may
@@ -16,4 +16,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=all={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=synthizer");
+    #[cfg(target_family="unix")] {
+        println!("cargo:rustc-link-lib=stdc++");
+    }
 }
