@@ -3,7 +3,7 @@
 pub type syz_Handle = ::std::os::raw::c_ulonglong;
 pub type syz_ErrorCode = ::std::os::raw::c_int;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_Event {
     pub type_: ::std::os::raw::c_int,
     pub source: syz_Handle,
@@ -117,6 +117,11 @@ fn bindgen_test_layout_syz_LibraryConfig() {
         )
     );
 }
+impl Default for syz_LibraryConfig {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn syz_libraryConfigSetDefaults(config: *mut syz_LibraryConfig);
 }
@@ -142,7 +147,7 @@ extern "C" {
     pub fn syz_handleDecRef(handle: syz_Handle) -> syz_ErrorCode;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_DeleteBehaviorConfig {
     pub linger: ::std::os::raw::c_int,
     pub linger_timeout: f64,
@@ -296,7 +301,7 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_BiquadConfig {
     pub _b0: f64,
     pub _b1: f64,
@@ -574,6 +579,11 @@ fn bindgen_test_layout_syz_CustomStreamDef() {
         )
     );
 }
+impl Default for syz_CustomStreamDef {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn syz_createStreamHandleFromCustomStream(
         out: *mut syz_Handle,
@@ -697,7 +707,7 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_RouteConfig {
     pub gain: f32,
     pub fade_time: f32,
@@ -772,7 +782,7 @@ extern "C" {
     pub fn syz_createGlobalEcho(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_EchoTapConfig {
     pub delay: f32,
     pub gain_l: f32,

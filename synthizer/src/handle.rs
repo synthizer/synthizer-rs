@@ -1,6 +1,6 @@
 use synthizer_sys::*;
 
-pub(crate) struct Handle(pub(crate) syz_Handle);
+pub struct Handle(pub(crate) syz_Handle);
 
 impl Clone for Handle {
     fn clone(&self) -> Handle {
