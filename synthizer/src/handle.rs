@@ -13,7 +13,8 @@ impl Drop for Handle {
 
 impl Clone for Handle {
     fn clone(&self) -> Handle {
-        check_error(unsafe { syz_handleIncRef(self.0) }).expect("Incrementing reference counts should never error");
+        check_error(unsafe { syz_handleIncRef(self.0) })
+            .expect("Incrementing reference counts should never error");
         Handle(self.0)
     }
 }

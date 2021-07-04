@@ -21,6 +21,7 @@ impl Context {
     }
 
     /// Get any pending events.  The returned iterator will not block, and iterates over any pending events until the first error.  This is lazy: to limit the number of events received, use `.take`.
+    #[allow(clippy::needless_lifetimes)] // Actually appears to be a false positive.
     pub fn get_events<'a>(&'a self) -> impl Iterator<Item = Result<events::Event>> + 'a {
         events::EventIterator {
             context: self,
