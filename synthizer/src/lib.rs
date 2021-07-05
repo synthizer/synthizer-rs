@@ -1,4 +1,5 @@
 mod biquad;
+mod buffer;
 mod buffer_generator;
 mod common_functionality_macros;
 mod context;
@@ -9,6 +10,7 @@ mod initialization;
 mod property_tables;
 
 pub use biquad::*;
+pub use buffer::*;
 pub use buffer_generator::*;
 pub use context::*;
 pub use errors::*;

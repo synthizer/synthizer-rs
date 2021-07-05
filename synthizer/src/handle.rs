@@ -24,12 +24,12 @@ impl Clone for Handle {
 mod to_handle {
     use super::*;
 
-/// Internal helper trait to convert things to handles.  We don't use `From`
-/// because that's public: people should be using the bindings, not converting
-/// handles directly.
-pub trait ToHandle {
-    fn to_handle(&self) -> syz_Handle;
-}
+    /// Internal helper trait to convert things to handles.  We don't use `From`
+    /// because that's public: people should be using the bindings, not converting
+    /// handles directly.
+    pub trait ToHandle {
+        fn to_handle(&self) -> syz_Handle;
+    }
 }
 
 pub(crate) use to_handle::*;

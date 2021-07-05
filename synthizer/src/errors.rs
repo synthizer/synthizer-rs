@@ -19,6 +19,14 @@ pub struct Error {
 }
 
 impl Error {
+    pub(crate) fn rust_error(msg: &str) -> Error {
+        Error {
+            message: msg.to_string(),
+            kind: ErrorKind::Other,
+            code: 0,
+        }
+    }
+
     pub fn message(&self) -> &str {
         self.message.as_str()
     }

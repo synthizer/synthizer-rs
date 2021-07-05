@@ -17,6 +17,6 @@ impl BufferGenerator {
 
 impl ToHandle for BufferGenerator {
     fn to_handle(&self) -> syz_Handle {
-        self.0.0
+        self.0 .0
     }
 }
