@@ -33,3 +33,9 @@ mod to_handle {
 }
 
 pub(crate) use to_handle::*;
+
+impl ToHandle for Handle {
+    fn to_handle(&self) -> syz_Handle {
+        self.0
+    }
+}
