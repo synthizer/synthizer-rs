@@ -12,6 +12,7 @@ mod handle;
 mod initialization;
 mod panned_source;
 mod property_tables;
+mod source_3d;
 
 pub use biquad::*;
 pub use buffer::*;
@@ -23,3 +24,4 @@ pub use errors::*;
 pub use events::*;
 pub use initialization::*;
 pub use panned_source::*;
+pub use source_3d::*;

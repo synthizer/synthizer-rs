@@ -33,7 +33,7 @@ macro_rules! enum_p {
                 check_error(unsafe {
                     syz_getI(&mut out as *mut i32, self.to_handle(), $syz_const as i32)
                 })?;
-                Ok(unsafe{std::mem::transmute(out)})
+                Ok(unsafe { std::mem::transmute(out) })
             }
 
             pub fn $setter(&self, value: $e) -> Result<()> {
@@ -106,6 +106,83 @@ macro_rules! biquad_p {
     };
 }
 
+macro_rules! double3_p {
+    ($t: ty, $syz_const: expr, $getter: ident, $setter: ident) => {
+        impl $t {
+            pub fn $getter(&self) -> Result<(f64, f64, f64)> {
+                let mut o1 = Default::default();
+                let mut o2 = Default::default();
+                let mut o3 = Default::default();
+                check_error(unsafe {
+                    syz_getD3(
+                        &mut o1 as *mut f64,
+                        &mut o2 as *mut f64,
+                        &mut o3 as *mut f64,
+                        self.to_handle(),
+                        $syz_const as i32,
+                    )
+                })?;
+                Ok((o1, o2, o3))
+            }
+
+            pub fn $setter(&self, values: (f64, f64, f64)) -> Result<()> {
+                check_error(unsafe {
+                    syz_setD3(
+                        self.to_handle(),
+                        $syz_const as i32,
+                        values.0,
+                        values.1,
+                        values.2,
+                    )
+                })
+            }
+        }
+    };
+}
+
+macro_rules! double6_p {
+    ($t: ty, $syz_const: expr, $getter: ident, $setter: ident) => {
+        impl $t {
+            pub fn $getter(&self) -> Result<(f64, f64, f64, f64, f64, f64)> {
+                let mut o1 = Default::default();
+                let mut o2 = Default::default();
+                let mut o3 = Default::default();
+                let mut o4 = Default::default();
+                let mut o5 = Default::default();
+                let mut o6 = Default::default();
+                check_error(unsafe {
+                    syz_getD6(
+                        &mut o1 as *mut f64,
+                        &mut o2 as *mut f64,
+                        &mut o3 as *mut f64,
+                        &mut o4 as *mut f64,
+                        &mut o5 as *mut f64,
+                        &mut o6 as *mut f64,
+                        self.to_handle(),
+                        $syz_const as i32,
+                    )
+                })?;
+                Ok((o1, o2, o3, o4, o5, o6))
+            }
+
+            pub fn $setter(&self, values: (f64, f64, f64, f64, f64, f64)) -> Result<()> {
+                check_error(unsafe {
+                    syz_setD6(
+                        self.to_handle(),
+                        $syz_const as i32,
+                        values.0,
+                        values.1,
+                        values.2,
+                        values.3,
+                        values.4,
+                        values.5,
+                    )
+                })
+            }
+        }
+    };
+}
+
 macro_rules! generator_properties {
     ($t: ty) => {
         double_p!($t, SYZ_P_PITCH_BEND, get_pitch_bend, set_pitch_bend);
@@ -144,11 +221,59 @@ macro_rules! source_properties {
 
 source_properties!(DirectSource);
 
-
-
-
 source_properties!(PannedSource);
-enum_p!(PannedSource, PannerStrategy, SYZ_P_PANNER_STRATEGY, get_panner_strategy, set_panner_strategy);
+enum_p!(
+    PannedSource,
+    PannerStrategy,
+    SYZ_P_PANNER_STRATEGY,
+    get_panner_strategy,
+    set_panner_strategy
+);
 double_p!(PannedSource, SYZ_P_ELEVATION, get_elevation, set_elevation);
 double_p!(PannedSource, SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
-double_p!(PannedSource, SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
+double_p!(
+    PannedSource,
+    SYZ_P_PANNING_SCALAR,
+    get_panning_scalar,
+    set_panning_scalar
+);
+
+enum_p!(
+    Source3D,
+    DistanceModel,
+    SYZ_P_DISTANCE_MODEL,
+    get_distance_model,
+    set_distance_model
+);
+double_p!(
+    Source3D,
+    SYZ_P_DISTANCE_REF,
+    get_distance_ref,
+    set_distance_ref
+);
+double_p!(
+    Source3D,
+    SYZ_P_DISTANCE_MAX,
+    get_distance_max,
+    set_distance_max
+);
+double_p!(Source3D, SYZ_P_ROLLOFF, get_rolloff, set_rolloff);
+double_p!(
+    Source3D,
+    SYZ_P_CLOSENESS_BOOST,
+    get_closeness_boost,
+    set_closeness_boost
+);
+double_p!(
+    Source3D,
+    SYZ_P_CLOSENESS_BOOST_DISTANCE,
+    get_closeness_boost_distance,
+    set_closeness_boost_distance
+);
+double3_p!(Source3D, SYZ_P_POSITION, get_position, set_position);
+double6_p!(
+    Source3D,
+    SYZ_P_ORIENTATION,
+    get_orientation,
+    set_orientation
+);
