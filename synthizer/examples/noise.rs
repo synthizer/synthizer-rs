@@ -18,7 +18,7 @@ fn main() -> syz::Result<()> {
     .iter()
     {
         println!("{:?}", i);
-        gen.set_noise_type(*i);
+        gen.set_noise_type(*i)?;
         std::thread::sleep(std::time::Duration::from_secs(5));
     }
 

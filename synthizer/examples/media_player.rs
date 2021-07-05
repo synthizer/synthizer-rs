@@ -36,7 +36,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
     let mut stdout = std::io::stdout();
     loop {
         print!("> ");
-        stdout.flush();
+        stdout.flush().expect("Should flush");
 
         let mut line = String::new();
         stdin.read_line(&mut line).expect("Should always read");
@@ -71,7 +71,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
                 }
                 let pos = match f64::from_str(parts[1]) {
                     Ok(f) => f,
-                    Err(e) => {
+                    Err(_) => {
                         println!("Invalid position");
                         continue;
                     }
