@@ -68,7 +68,7 @@ pub type SYZ_LOG_LEVEL = ::std::os::raw::c_uint;
 pub struct syz_LibraryConfig {
     pub log_level: ::std::os::raw::c_uint,
     pub logging_backend: ::std::os::raw::c_uint,
-    pub libsndfile_path: *mut ::std::os::raw::c_char,
+    pub libsndfile_path: *const ::std::os::raw::c_char,
 }
 #[test]
 fn bindgen_test_layout_syz_LibraryConfig() {
@@ -129,7 +129,7 @@ extern "C" {
     pub fn syz_initialize() -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_initializeWithConfig(config: *mut syz_LibraryConfig) -> syz_ErrorCode;
+    pub fn syz_initializeWithConfig(config: *const syz_LibraryConfig) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_shutdown() -> syz_ErrorCode;
