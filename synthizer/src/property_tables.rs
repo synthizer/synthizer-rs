@@ -286,6 +286,7 @@ double_p!(
     set_panning_scalar
 );
 
+source_properties!(Source3D);
 enum_p!(
     Source3D,
     DistanceModel,
