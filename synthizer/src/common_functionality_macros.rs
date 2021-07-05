@@ -44,3 +44,4 @@ pausable_common!(Context);
 pausable_common!(DirectSource);
 
 source_common!(DirectSource);
+source_common!(PannedSource);

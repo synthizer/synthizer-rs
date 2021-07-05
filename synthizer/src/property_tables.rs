@@ -25,6 +25,27 @@ macro_rules! bool_p {
     };
 }
 
+macro_rules! enum_p {
+    ($t: ty, $e: ty, $syz_const: expr, $getter: ident, $setter: ident) => {
+        impl $t {
+            pub fn $getter(&self) -> Result<$e> {
+                let mut out = Default::default();
+                check_error(unsafe {
+                    syz_getI(&mut out as *mut i32, self.to_handle(), $syz_const as i32)
+                })?;
+                Ok(unsafe{std::mem::transmute(out)})
+            }
+
+            pub fn $setter(&self, value: $e) -> Result<()> {
+                check_error(unsafe {
+                    syz_setI(self.to_handle(), $syz_const as i32, value as i32)
+                })?;
+                Ok(())
+            }
+        }
+    };
+}
+
 macro_rules! double_p {
     ($t: ty, $syz_const: expr, $getter: ident, $setter: ident) => {
         impl $t {
@@ -122,3 +143,12 @@ macro_rules! source_properties {
 }
 
 source_properties!(DirectSource);
+
+
+
+
+source_properties!(PannedSource);
+enum_p!(PannedSource, PannerStrategy, SYZ_P_PANNER_STRATEGY, get_panner_strategy, set_panner_strategy);
+double_p!(PannedSource, SYZ_P_ELEVATION, get_elevation, set_elevation);
+double_p!(PannedSource, SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
+double_p!(PannedSource, SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
