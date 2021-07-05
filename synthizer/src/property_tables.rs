@@ -57,14 +57,42 @@ macro_rules! object_p {
     };
 }
 
-macro_rules! generator_common {
+macro_rules! biquad_p {
+    ($t: ty, $syz_const: expr, $getter:ident, $setter: ident) => {
+        impl $t {
+            pub fn $getter(&self) -> Result<BiquadConfig> {
+                let mut out = Default::default();
+                check_error(unsafe {
+                    syz_getBiquad(
+                        &mut out as *mut syz_BiquadConfig,
+                        self.to_handle(),
+                        $syz_const as i32,
+                    )
+                })?;
+                Ok(BiquadConfig { cfg: out })
+            }
+
+            pub fn $setter(&self, cfg: &BiquadConfig) -> Result<()> {
+                check_error(unsafe {
+                    syz_setBiquad(
+                        self.to_handle(),
+                        $syz_const as i32,
+                        &cfg.cfg as *const syz_BiquadConfig,
+                    )
+                })
+            }
+        }
+    };
+}
+
+macro_rules! generator_properties {
     ($t: ty) => {
         double_p!($t, SYZ_P_PITCH_BEND, get_pitch_bend, set_pitch_bend);
         double_p!($t, SYZ_P_GAIN, get_gain, set_gain);
     };
 }
 
-generator_common!(BufferGenerator);
+generator_properties!(BufferGenerator);
 bool_p!(BufferGenerator, SYZ_P_LOOPING, get_looping, set_looping);
 double_p!(
     BufferGenerator,
@@ -73,3 +101,24 @@ double_p!(
     set_playback_position
 );
 object_p!(BufferGenerator, SYZ_P_BUFFER, set_buffer);
+
+macro_rules! source_properties {
+    ($t: ty) => {
+        double_p!($t, SYZ_P_GAIN, get_gain, set_gain);
+        biquad_p!($t, SYZ_P_FILTER, get_filter, set_filter);
+        biquad_p!(
+            $t,
+            SYZ_P_FILTER_DIRECT,
+            get_filter_direct,
+            set_filter_direct
+        );
+        biquad_p!(
+            $t,
+            SYZ_P_FILTER_EFFECTS,
+            get_filter_effects,
+            set_filter_effects
+        );
+    };
+}
+
+source_properties!(DirectSource);
