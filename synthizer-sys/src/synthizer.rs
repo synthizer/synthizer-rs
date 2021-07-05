@@ -835,7 +835,7 @@ extern "C" {
     pub fn syz_globalEchoSetTaps(
         handle: syz_Handle,
         n_taps: ::std::os::raw::c_uint,
-        taps: *mut syz_EchoTapConfig,
+        taps: *const syz_EchoTapConfig,
     ) -> syz_ErrorCode;
 }
 extern "C" {

@@ -337,4 +337,18 @@ enum_p!(
 );
 
 generator_properties!(StreamingGenerator);
-double_p!(StreamingGenerator, SYZ_P_PLAYBACK_POSITION, get_playback_position, set_playback_position);
+double_p!(
+    StreamingGenerator,
+    SYZ_P_PLAYBACK_POSITION,
+    get_playback_position,
+    set_playback_position
+);
+
+macro_rules! effect_properties {
+    ($t: ty) => {
+        double_p!($t, SYZ_P_GAIN, get_gain, set_gain);
+        biquad_p!($t, SYZ_P_FILTER_INPUT, get_filter_input, set_filter_input);
+    };
+}
+
+effect_properties!(GlobalEcho);
