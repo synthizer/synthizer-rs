@@ -14,6 +14,7 @@ mod noise_generator;
 mod panned_source;
 mod property_tables;
 mod source_3d;
+mod streaming_generator;
 
 pub use biquad::*;
 pub use buffer::*;
@@ -27,3 +28,4 @@ pub use initialization::*;
 pub use noise_generator::*;
 pub use panned_source::*;
 pub use source_3d::*;
+pub use streaming_generator::*;

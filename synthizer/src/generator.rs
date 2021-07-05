@@ -11,3 +11,4 @@ impl Generator for Handle {}
 
 impl Generator for BufferGenerator {}
 impl Generator for NoiseGenerator {}
+impl Generator for StreamingGenerator {}

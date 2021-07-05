@@ -335,3 +335,6 @@ enum_p!(
     get_noise_type,
     set_noise_type
 );
+
+generator_properties!(StreamingGenerator);
+double_p!(StreamingGenerator, SYZ_P_PLAYBACK_POSITION, get_playback_position, set_playback_position);

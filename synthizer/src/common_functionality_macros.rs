@@ -45,6 +45,7 @@ pausable_common!(DirectSource);
 pausable_common!(NoiseGenerator);
 pausable_common!(PannedSource);
 pausable_common!(Source3D);
+pausable_common!(StreamingGenerator);
 
 source_common!(DirectSource);
 source_common!(PannedSource);

@@ -10,8 +10,7 @@ fn main() -> syz::Result<()> {
     let mut init_config = syz::LibraryConfig::new();
     init_config.log_level(syz::LogLevel::Debug);
     init_config.log_to_stderr();
-    init_config
-        .load_libsndfile(args[1].as_str())?;
+    init_config.load_libsndfile(args[1].as_str())?;
     let _init_guard = init_config.initialize()?;
 
     let context = syz::Context::new()?;
