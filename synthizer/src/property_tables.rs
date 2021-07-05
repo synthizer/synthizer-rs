@@ -326,3 +326,12 @@ double6_p!(
     get_orientation,
     set_orientation
 );
+
+generator_properties!(NoiseGenerator);
+enum_p!(
+    NoiseGenerator,
+    NoiseType,
+    SYZ_P_NOISE_TYPE,
+    get_noise_type,
+    set_noise_type
+);

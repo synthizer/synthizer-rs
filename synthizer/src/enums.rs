@@ -16,3 +16,11 @@ pub enum DistanceModel {
     Exponential = SYZ_DISTANCE_MODEL_EXPONENTIAL as i32,
     Inverse = SYZ_DISTANCE_MODEL_INVERSE as i32,
 }
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
+#[repr(i32)]
+pub enum NoiseType {
+    Uniform = SYZ_NOISE_TYPE_UNIFORM as i32,
+    Vm = SYZ_NOISE_TYPE_VM as i32,
+    FilteredBrown = SYZ_NOISE_TYPE_FILTERED_BROWN as i32,
+}

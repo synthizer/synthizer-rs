@@ -42,6 +42,7 @@ macro_rules! source_common {
 pausable_common!(BufferGenerator);
 pausable_common!(Context);
 pausable_common!(DirectSource);
+pausable_common!(NoiseGenerator);
 pausable_common!(PannedSource);
 pausable_common!(Source3D);
 

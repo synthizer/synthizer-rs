@@ -10,3 +10,4 @@ pub trait Generator: ToHandle {}
 impl Generator for Handle {}
 
 impl Generator for BufferGenerator {}
+impl Generator for NoiseGenerator {}
