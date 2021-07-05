@@ -183,6 +183,54 @@ macro_rules! double6_p {
     };
 }
 
+double_p!(Context, SYZ_P_GAIN, get_gain, set_gain);
+enum_p!(
+    Context,
+    PannerStrategy,
+    SYZ_P_DEFAULT_PANNER_STRATEGY,
+    get_default_panner_strategy,
+    set_default_panner_strategy
+);
+enum_p!(
+    Context,
+    DistanceModel,
+    SYZ_P_DEFAULT_DISTANCE_MODEL,
+    get_default_distance_model,
+    set_default_distance_model
+);
+double_p!(
+    Context,
+    SYZ_P_DEFAULT_DISTANCE_REF,
+    get_default_distance_ref,
+    set_default_distance_ref
+);
+double_p!(
+    Context,
+    SYZ_P_DEFAULT_DISTANCE_MAX,
+    get_default_distance_max,
+    set_default_distance_max
+);
+double_p!(
+    Context,
+    SYZ_P_DEFAULT_ROLLOFF,
+    get_default_rolloff,
+    set_default_rolloff
+);
+double_p!(
+    Context,
+    SYZ_P_DEFAULT_CLOSENESS_BOOST,
+    get_default_closeness_boost,
+    set_default_closeness_boost
+);
+double_p!(
+    Context,
+    SYZ_P_DEFAULT_CLOSENESS_BOOST_DISTANCE,
+    get_default_closeness_boost_distance,
+    set_default_closeness_boost_distance
+);
+double3_p!(Context, SYZ_P_POSITION, get_position, set_position);
+double6_p!(Context, SYZ_P_ORIENTATION, get_orientation, set_orientation);
+
 macro_rules! generator_properties {
     ($t: ty) => {
         double_p!($t, SYZ_P_PITCH_BEND, get_pitch_bend, set_pitch_bend);
