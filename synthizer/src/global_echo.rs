@@ -37,6 +37,8 @@ impl GlobalEcho {
     pub fn clear_taps(&self) -> Result<()> {
         check_error(unsafe { syz_globalEchoSetTaps(self.to_handle(), 0, std::ptr::null()) })
     }
+
+    effect_properties!();
 }
 
 impl ToHandle for GlobalEcho {

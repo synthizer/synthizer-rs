@@ -13,6 +13,17 @@ impl BufferGenerator {
         check_error(unsafe { syz_createBufferGenerator(&mut h as *mut u64, context.to_handle()) })?;
         Ok(BufferGenerator(Handle(h)))
     }
+
+    generator_properties!();
+    bool_p!(SYZ_P_LOOPING, get_looping, set_looping);
+    double_p!(
+        SYZ_P_PLAYBACK_POSITION,
+        get_playback_position,
+        set_playback_position
+    );
+    object_p!(SYZ_P_BUFFER, set_buffer);
+
+    pausable_common!();
 }
 
 impl ToHandle for BufferGenerator {

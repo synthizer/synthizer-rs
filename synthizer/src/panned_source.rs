@@ -2,7 +2,9 @@ use synthizer_sys::*;
 
 use crate::context::*;
 use crate::errors::*;
+use crate::generator::*;
 use crate::handle::*;
+use crate::*;
 
 #[derive(Clone)]
 pub struct PannedSource(Handle);
@@ -15,6 +17,20 @@ impl PannedSource {
         })?;
         Ok(PannedSource(Handle(h)))
     }
+
+    source_properties!();
+    enum_p!(
+        PannerStrategy,
+        SYZ_P_PANNER_STRATEGY,
+        get_panner_strategy,
+        set_panner_strategy
+    );
+    double_p!(SYZ_P_ELEVATION, get_elevation, set_elevation);
+    double_p!(SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
+    double_p!(SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
+
+    pausable_common!();
+    source_common!();
 }
 
 impl ToHandle for PannedSource {

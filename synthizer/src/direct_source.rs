@@ -2,7 +2,10 @@ use synthizer_sys::*;
 
 use crate::context::*;
 use crate::errors::*;
+use crate::generator::*;
 use crate::handle::*;
+use crate::*;
+
 #[derive(Clone)]
 pub struct DirectSource(Handle);
 
@@ -14,6 +17,11 @@ impl DirectSource {
         })?;
         Ok(DirectSource(Handle(h)))
     }
+
+    source_properties!();
+
+    pausable_common!();
+    source_common!();
 }
 
 impl ToHandle for DirectSource {

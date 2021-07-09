@@ -24,6 +24,15 @@ impl StreamingGenerator {
         })?;
         Ok(StreamingGenerator(Handle(h)))
     }
+
+    generator_properties!();
+    double_p!(
+        SYZ_P_PLAYBACK_POSITION,
+        get_playback_position,
+        set_playback_position
+    );
+
+    pausable_common!();
 }
 
 impl ToHandle for StreamingGenerator {

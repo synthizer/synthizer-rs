@@ -15,6 +15,11 @@ impl NoiseGenerator {
         })?;
         Ok(NoiseGenerator(Handle(h)))
     }
+
+    generator_properties!();
+    enum_p!(NoiseType, SYZ_P_NOISE_TYPE, get_noise_type, set_noise_type);
+
+    pausable_common!();
 }
 
 impl ToHandle for NoiseGenerator {

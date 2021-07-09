@@ -1,7 +1,11 @@
+#[macro_use]
+mod common_functionality_macros;
+#[macro_use]
+mod property_tables;
+
 mod biquad;
 mod buffer;
 mod buffer_generator;
-mod common_functionality_macros;
 mod context;
 mod direct_source;
 mod enums;
@@ -14,7 +18,6 @@ mod handle;
 mod initialization;
 mod noise_generator;
 mod panned_source;
-mod property_tables;
 mod source_3d;
 mod streaming_generator;
 
