@@ -352,3 +352,60 @@ macro_rules! effect_properties {
 }
 
 effect_properties!(GlobalEcho);
+
+effect_properties!(GlobalFdnReverb);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_MEAN_FREE_PATH,
+    get_mean_free_path,
+    set_mean_free_path
+);
+double_p!(GlobalFdnReverb, SYZ_P_T60, get_t60, set_t60);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_LF_ROLLOFF,
+    get_late_reflections_lf_rolloff,
+    set_late_reflections_lf_rolloff
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_LF_REFERENCE,
+    get_late_reflections_lf_reference,
+    set_late_reflections_lf_reference
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_HF_ROLLOFF,
+    get_late_reflections_hf_rolloff,
+    set_late_reflections_hf_rolloff
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_HF_REFERENCE,
+    get_late_reflections_hf_reference,
+    set_late_reflections_hf_reference
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_DIFFUSION,
+    get_late_reflections_diffusion,
+    set_late_reflections_diffusion
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_MODULATION_DEPTH,
+    get_late_reflections_modulation_depth,
+    set_late_reflections_modulation_depth
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_MODULATION_FREQUENCY,
+    get_late_reflections_modulation_frequency,
+    set_late_reflections_modulation_frequency
+);
+double_p!(
+    GlobalFdnReverb,
+    SYZ_P_LATE_REFLECTIONS_DELAY,
+    get_late_reflections_delay,
+    set_late_reflections_delay
+);

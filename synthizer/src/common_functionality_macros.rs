@@ -62,3 +62,5 @@ source_common!(PannedSource);
 source_common!(Source3D);
 
 effect_common!(GlobalEcho);
+
+effect_common!(GlobalFdnReverb);
