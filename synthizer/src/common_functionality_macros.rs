@@ -39,6 +39,16 @@ macro_rules! source_common {
     };
 }
 
+macro_rules! effect_common {
+    ($t: ty) => {
+        impl $t {
+            pub fn reset(&self) -> Result<()> {
+                check_error(unsafe { syz_effectReset(self.to_handle()) })
+            }
+        }
+    };
+}
+
 pausable_common!(BufferGenerator);
 pausable_common!(Context);
 pausable_common!(DirectSource);
@@ -50,3 +60,5 @@ pausable_common!(StreamingGenerator);
 source_common!(DirectSource);
 source_common!(PannedSource);
 source_common!(Source3D);
+
+effect_common!(GlobalEcho);
