@@ -1,6 +1,6 @@
 use synthizer as syz;
 
 #[test]
-fn initialize() {
+fn test_initialize() {
     let _guard = syz::initialize().expect("Synthizer should initialize");
 }
