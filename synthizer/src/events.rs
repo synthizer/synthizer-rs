@@ -46,14 +46,14 @@ impl<'a> EventIterator<'a> {
         // be careful here: we must make sure to deinitialize the event before returning.
         let inc_ret = check_error(unsafe { syz_handleIncRef(evt.source) })
             .and_then(|_| {
-                source = Some(Handle(evt.source));
+                source = Some(Handle::new(evt.source));
                 if evt.context == 0 {
                     return Ok(());
                 }
                 check_error(unsafe { syz_handleIncRef(evt.context) })
             })
             .map(|_| {
-                context = Some(Context(Handle(evt.context)));
+                context = Some(Context(Handle::new(evt.context)));
             });
 
         let r#type = unsafe { std::mem::transmute(evt.type_) };

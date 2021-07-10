@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -15,7 +17,7 @@ impl BufferGenerator {
         check_error(unsafe {
             syz_createBufferGenerator(&mut h as *mut u64, context.to_syz_handle())
         })?;
-        Ok(BufferGenerator(Handle(h)))
+        Ok(BufferGenerator(Handle::new(h)))
     }
 
     generator_properties!();

@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Arc;
 
 use synthizer_sys::*;
 
@@ -23,7 +24,7 @@ impl Buffer {
         check_error(unsafe {
             syz_createBufferFromFile(&mut h as *mut syz_Handle, c_str.as_ptr())
         })?;
-        Ok(Buffer(Handle(h)))
+        Ok(Buffer(Handle::new(h)))
     }
 
     pub fn get_length_in_samples(&self) -> Result<u32> {

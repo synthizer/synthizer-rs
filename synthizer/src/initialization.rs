@@ -8,9 +8,17 @@ use crate::errors::*;
 /// alive for the duration of your program.
 pub struct InitializationGuard();
 
+impl InitializationGuard {
+    fn new_init() -> InitializationGuard {
+        crate::userdata::init_userdata_map();
+        InitializationGuard()
+    }
+}
+
 impl Drop for InitializationGuard {
     fn drop(&mut self) {
         unsafe { syz_shutdown() };
+        crate::userdata::clear_userdata_map();
     }
 }
 
@@ -18,7 +26,7 @@ impl Drop for InitializationGuard {
 /// alive for the duration of your program.
 pub fn initialize() -> Result<InitializationGuard> {
     check_error(unsafe { syz_initialize() })?;
-    Ok(InitializationGuard())
+    Ok(InitializationGuard::new_init())
 }
 
 /// A builder to configure Synthizer initialization with non-default values.  To
@@ -73,7 +81,7 @@ impl LibraryConfig {
     /// Initialize Synthizer.
     pub fn initialize(self) -> Result<InitializationGuard> {
         check_error(unsafe { syz_initializeWithConfig(&self.config as *const syz_LibraryConfig) })?;
-        Ok(InitializationGuard())
+        Ok(InitializationGuard::new_init())
     }
 }
 

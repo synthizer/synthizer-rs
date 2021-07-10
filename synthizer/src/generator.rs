@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;

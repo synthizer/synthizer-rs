@@ -1,12 +1,19 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
 use crate::errors::*;
 use crate::*;
 
-pub struct Handle(pub(crate) syz_Handle);
+pub struct Handle(syz_Handle);
 
 impl Handle {
+    pub fn new(h: syz_Handle) -> Handle {
+        crate::userdata::register_handle(h);
+        Handle(h)
+    }
+
     pub fn handle(&self) -> &Handle {
         &self
     }
@@ -32,6 +39,20 @@ impl Handle {
         T::cast_from(self.handle_ref())
     }
 
+    /// Set the userdata associated with this object.
+    pub fn set_userdata(&self, userdata: Option<impl 'static + Send + Sync>) {
+        crate::userdata::set_userdata(self.0, userdata);
+    }
+
+    /// Get userdata of a specified type.  This will return `None` if no
+    /// userdata was set or if the returned type cannot be converted to the
+    /// specified type.
+    pub fn get_userdata<T: 'static + Send + Sync>(&self) -> Option<Arc<T>> {
+        let ud = crate::userdata::get_userdata(self.0)?;
+        ud.downcast().ok()
+    }
+
+    #[allow(clippy::wrong_self_convention)]
     pub(crate) fn from_handle_internal(h: Handle) -> Handle {
         h
     }
@@ -41,6 +62,7 @@ impl Drop for Handle {
     fn drop(&mut self) {
         check_error(unsafe { syz_handleDecRef(self.0) })
             .expect("Dropping handles should not error");
+        crate::userdata::unregister_handle(self.0);
     }
 }
 
@@ -88,7 +110,7 @@ macro_rules! handle_traits {
     ($t: ty) => {
         impl ToSyzHandle for $t {
             fn to_syz_handle(&self) -> syz_Handle {
-                self.0 .0
+                self.0.to_syz_handle()
             }
         }
 

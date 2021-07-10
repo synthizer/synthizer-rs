@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -14,7 +16,7 @@ impl NoiseGenerator {
         check_error(unsafe {
             syz_createNoiseGenerator(&mut h as *mut syz_Handle, context.to_syz_handle(), channels)
         })?;
-        Ok(NoiseGenerator(Handle(h)))
+        Ok(NoiseGenerator(Handle::new(h)))
     }
 
     generator_properties!();

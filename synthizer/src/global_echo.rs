@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -17,7 +19,7 @@ impl GlobalEcho {
     pub fn new(context: &Context) -> Result<GlobalEcho> {
         let mut h = Default::default();
         check_error(unsafe { syz_createGlobalEcho(&mut h, context.to_syz_handle()) })?;
-        Ok(GlobalEcho(Handle(h)))
+        Ok(GlobalEcho(Handle::new(h)))
     }
 
     /// An empty slice clears the taps. Alternatively, you can use `clear_taps`.

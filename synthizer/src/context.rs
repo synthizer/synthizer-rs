@@ -1,4 +1,5 @@
 //! The `Context`.
+use std::sync::Arc;
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -16,7 +17,7 @@ impl Context {
     pub fn new() -> Result<Context> {
         let mut h = 0;
         check_error(unsafe { syz_createContext(&mut h as *mut syz_Handle) })?;
-        Ok(Context(Handle(h)))
+        Ok(Context(Handle::new(h)))
     }
 
     pub fn enable_events(&self) -> Result<()> {

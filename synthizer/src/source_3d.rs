@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -16,7 +17,7 @@ impl Source3D {
         check_error(unsafe {
             syz_createSource3D(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
-        Ok(Source3D(Handle(h)))
+        Ok(Source3D(Handle::new(h)))
     }
 
     source_properties!();

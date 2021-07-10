@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Arc;
 
 use synthizer_sys::*;
 
@@ -23,7 +24,7 @@ impl StreamingGenerator {
         check_error(unsafe {
             syz_createStreamingGeneratorFromFile(&mut h, context.to_syz_handle(), c_str.as_ptr())
         })?;
-        Ok(StreamingGenerator(Handle(h)))
+        Ok(StreamingGenerator(Handle::new(h)))
     }
 
     generator_properties!();

@@ -23,6 +23,19 @@ macro_rules! object_common {
             T::cast_from(self.handle_ref())
         }
 
+        /// Set the userdata associated with this object.
+        pub fn set_userdata(&self, userdata: Option<impl 'static + Send + Sync>) {
+            crate::userdata::set_userdata(self.to_syz_handle(), userdata);
+        }
+
+        /// Get userdata of a specified type.  This will return `None` if no
+        /// userdata was set or if the returned type cannot be converted to the
+        /// specified type.
+        pub fn get_userdata<T: 'static + Send + Sync>(&self) -> Option<Arc<T>> {
+            let ud = crate::userdata::get_userdata(self.to_syz_handle())?;
+            ud.downcast().ok()
+        }
+
         /// Internal function to get objects from handles, used in
         /// casting.rs to enable casting from impls behind a macro.  This
         /// can't be pub: converting a handle of the worng type to a

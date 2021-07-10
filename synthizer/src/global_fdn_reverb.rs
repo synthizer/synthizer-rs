@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -15,7 +17,7 @@ impl GlobalFdnReverb {
         check_error(unsafe {
             syz_createGlobalFdnReverb(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
-        Ok(GlobalFdnReverb(Handle(h)))
+        Ok(GlobalFdnReverb(Handle::new(h)))
     }
 
     effect_properties!();

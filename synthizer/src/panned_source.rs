@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -16,7 +18,7 @@ impl PannedSource {
         check_error(unsafe {
             syz_createPannedSource(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
-        Ok(PannedSource(Handle(h)))
+        Ok(PannedSource(Handle::new(h)))
     }
 
     source_properties!();

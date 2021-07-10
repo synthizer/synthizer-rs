@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use synthizer_sys::*;
 
 use crate::casting::*;
@@ -16,7 +18,7 @@ impl DirectSource {
         check_error(unsafe {
             syz_createDirectSource(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
-        Ok(DirectSource(Handle(h)))
+        Ok(DirectSource(Handle::new(h)))
     }
 
     source_properties!();
