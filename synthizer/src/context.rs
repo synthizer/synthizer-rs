@@ -60,6 +60,22 @@ impl Context {
         self.config_route(output, input, &Default::default())
     }
 
+    pub fn remove_route(
+        &self,
+        output: &dyn RouteOutput,
+        input: &dyn RouteInput,
+        fade_out: f64,
+    ) -> Result<()> {
+        check_error(unsafe {
+            syz_routingRemoveRoute(
+                self.to_handle(),
+                output.to_handle(),
+                input.to_handle(),
+                fade_out,
+            )
+        })
+    }
+
     double_p!(SYZ_P_GAIN, get_gain, set_gain);
     enum_p!(
         PannerStrategy,
