@@ -63,3 +63,13 @@ impl ToSyzHandle for Handle {
         self.0
     }
 }
+
+macro_rules! to_syz_handle {
+    ($t: ty) => {
+        impl ToSyzHandle for $t {
+            fn to_syz_handle(&self) -> syz_Handle {
+                self.0 .0
+            }
+        }
+    };
+}

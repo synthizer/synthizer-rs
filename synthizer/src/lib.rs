@@ -2,6 +2,8 @@
 mod common_functionality_macros;
 #[macro_use]
 mod property_tables;
+#[macro_use]
+mod handle;
 
 mod biquad;
 mod buffer;
@@ -15,7 +17,6 @@ mod events;
 mod generator;
 mod global_echo;
 mod global_fdn_reverb;
-mod handle;
 mod initialization;
 mod noise_generator;
 mod panned_source;

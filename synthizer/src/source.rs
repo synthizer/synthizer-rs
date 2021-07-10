@@ -17,8 +17,4 @@ impl Source {
     source_common!();
 }
 
-impl ToSyzHandle for Source {
-    fn to_syz_handle(&self) -> syz_Handle {
-        self.0 .0
-    }
-}
+to_syz_handle!(Source);

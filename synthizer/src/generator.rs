@@ -14,11 +14,7 @@ impl Generator {
     generator_properties!();
 }
 
-impl ToSyzHandle for Generator {
-    fn to_syz_handle(&self) -> syz_Handle {
-        self.0 .0
-    }
-}
+to_syz_handle!(Generator);
 
 /// A marker trait for anything that can be a generator.
 pub trait IsGenerator: ToSyzHandle {}

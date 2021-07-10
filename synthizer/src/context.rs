@@ -121,8 +121,4 @@ impl Context {
     pausable_common!();
 }
 
-impl ToSyzHandle for Context {
-    fn to_syz_handle(&self) -> syz_Handle {
-        self.0 .0
-    }
-}
+to_syz_handle!(Context);

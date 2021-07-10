@@ -66,8 +66,4 @@ impl GlobalFdnReverb {
     object_common!();
 }
 
-impl ToSyzHandle for GlobalFdnReverb {
-    fn to_syz_handle(&self) -> syz_Handle {
-        self.0 .0
-    }
-}
+to_syz_handle!(GlobalFdnReverb);
