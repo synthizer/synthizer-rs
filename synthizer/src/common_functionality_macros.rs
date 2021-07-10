@@ -38,13 +38,13 @@ macro_rules! pausable_common {
 
 macro_rules! source_common {
     () => {
-        pub fn add_generator<T: Generator>(&self, generator: &T) -> Result<()> {
+        pub fn add_generator<T: IsGenerator>(&self, generator: &T) -> Result<()> {
             check_error(unsafe {
                 syz_sourceAddGenerator(self.to_syz_handle(), generator.to_syz_handle())
             })
         }
 
-        pub fn remove_generator<T: Generator>(&self, generator: &T) -> Result<()> {
+        pub fn remove_generator<T: IsGenerator>(&self, generator: &T) -> Result<()> {
             check_error(unsafe {
                 syz_sourceRemoveGenerator(self.to_syz_handle(), generator.to_syz_handle())
             })
