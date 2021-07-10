@@ -15,7 +15,7 @@ pub type EchoTapConfig = syz_EchoTapConfig;
 impl GlobalEcho {
     pub fn new(context: &Context) -> Result<GlobalEcho> {
         let mut h = Default::default();
-        check_error(unsafe { syz_createGlobalEcho(&mut h, context.to_handle()) })?;
+        check_error(unsafe { syz_createGlobalEcho(&mut h, context.to_syz_handle()) })?;
         Ok(GlobalEcho(Handle(h)))
     }
 
@@ -27,7 +27,7 @@ impl GlobalEcho {
 
         check_error(unsafe {
             syz_globalEchoSetTaps(
-                self.to_handle(),
+                self.to_syz_handle(),
                 taps.len() as u32,
                 &taps[0] as *const syz_EchoTapConfig,
             )
@@ -35,14 +35,14 @@ impl GlobalEcho {
     }
 
     pub fn clear_taps(&self) -> Result<()> {
-        check_error(unsafe { syz_globalEchoSetTaps(self.to_handle(), 0, std::ptr::null()) })
+        check_error(unsafe { syz_globalEchoSetTaps(self.to_syz_handle(), 0, std::ptr::null()) })
     }
 
     effect_properties!();
 }
 
-impl ToHandle for GlobalEcho {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for GlobalEcho {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

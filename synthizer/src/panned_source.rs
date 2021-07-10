@@ -13,7 +13,7 @@ impl PannedSource {
     pub fn new(context: &Context) -> Result<PannedSource> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createPannedSource(&mut h as *mut syz_Handle, context.to_handle())
+            syz_createPannedSource(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
         Ok(PannedSource(Handle(h)))
     }
@@ -33,8 +33,8 @@ impl PannedSource {
     source_common!();
 }
 
-impl ToHandle for PannedSource {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for PannedSource {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

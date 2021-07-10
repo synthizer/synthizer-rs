@@ -27,7 +27,7 @@ impl Buffer {
     pub fn get_length_in_samples(&self) -> Result<u32> {
         let mut out = Default::default();
         check_error(unsafe {
-            syz_bufferGetLengthInSamples(&mut out as *mut u32, self.to_handle())
+            syz_bufferGetLengthInSamples(&mut out as *mut u32, self.to_syz_handle())
         })?;
         Ok(out)
     }
@@ -35,20 +35,20 @@ impl Buffer {
     pub fn get_length_in_seconds(&self) -> Result<f64> {
         let mut out = Default::default();
         check_error(unsafe {
-            syz_bufferGetLengthInSeconds(&mut out as *mut f64, self.to_handle())
+            syz_bufferGetLengthInSeconds(&mut out as *mut f64, self.to_syz_handle())
         })?;
         Ok(out)
     }
 
     pub fn get_channels(&self) -> Result<u32> {
         let mut out = Default::default();
-        check_error(unsafe { syz_bufferGetChannels(&mut out as *mut u32, self.to_handle()) })?;
+        check_error(unsafe { syz_bufferGetChannels(&mut out as *mut u32, self.to_syz_handle()) })?;
         Ok(out)
     }
 }
 
-impl ToHandle for Buffer {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for Buffer {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

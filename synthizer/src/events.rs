@@ -36,7 +36,7 @@ impl<'a> EventIterator<'a> {
         let mut evt: syz_Event = Default::default();
 
         check_error(unsafe {
-            syz_contextGetNextEvent(&mut evt as *mut syz_Event, self.context.to_handle(), 0)
+            syz_contextGetNextEvent(&mut evt as *mut syz_Event, self.context.to_syz_handle(), 0)
         })?;
 
         if evt.type_ == SYZ_EVENT_TYPE_INVALID as i32 {

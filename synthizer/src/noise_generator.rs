@@ -11,7 +11,7 @@ impl NoiseGenerator {
     pub fn new(context: &Context, channels: u32) -> Result<NoiseGenerator> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createNoiseGenerator(&mut h as *mut syz_Handle, context.to_handle(), channels)
+            syz_createNoiseGenerator(&mut h as *mut syz_Handle, context.to_syz_handle(), channels)
         })?;
         Ok(NoiseGenerator(Handle(h)))
     }
@@ -22,8 +22,8 @@ impl NoiseGenerator {
     pausable_common!();
 }
 
-impl ToHandle for NoiseGenerator {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for NoiseGenerator {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

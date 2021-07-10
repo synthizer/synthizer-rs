@@ -19,7 +19,7 @@ impl Context {
     }
 
     pub fn enable_events(&self) -> Result<()> {
-        check_error(unsafe { syz_contextEnableEvents(self.to_handle()) })
+        check_error(unsafe { syz_contextEnableEvents(self.to_syz_handle()) })
     }
 
     /// Get any pending events.  The returned iterator will not block, and iterates over any pending events until the first error.  This is lazy: to limit the number of events received, use `.take`.
@@ -42,9 +42,9 @@ impl Context {
     ) -> Result<()> {
         check_error(unsafe {
             syz_routingConfigRoute(
-                self.to_handle(),
-                output.to_handle(),
-                input.to_handle(),
+                self.to_syz_handle(),
+                output.to_syz_handle(),
+                input.to_syz_handle(),
                 &config.0 as *const syz_RouteConfig,
             )
         })?;
@@ -68,9 +68,9 @@ impl Context {
     ) -> Result<()> {
         check_error(unsafe {
             syz_routingRemoveRoute(
-                self.to_handle(),
-                output.to_handle(),
-                input.to_handle(),
+                self.to_syz_handle(),
+                output.to_syz_handle(),
+                input.to_syz_handle(),
                 fade_out,
             )
         })
@@ -120,8 +120,8 @@ impl Context {
     pausable_common!();
 }
 
-impl ToHandle for Context {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for Context {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

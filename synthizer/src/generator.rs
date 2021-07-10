@@ -2,7 +2,7 @@ use crate::handle::*;
 use crate::*;
 
 /// A marker trait for anything that can be a generator.
-pub trait Generator: ToHandle {}
+pub trait Generator: ToSyzHandle {}
 
 // These traits are about making it impossible to do things we know aren't
 // possible.  Since Synthizer also validates, let's allow people to use `Handle`

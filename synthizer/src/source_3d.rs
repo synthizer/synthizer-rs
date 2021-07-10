@@ -12,7 +12,9 @@ pub struct Source3D(Handle);
 impl Source3D {
     pub fn new(context: &Context) -> Result<Source3D> {
         let mut h = Default::default();
-        check_error(unsafe { syz_createSource3D(&mut h as *mut syz_Handle, context.to_handle()) })?;
+        check_error(unsafe {
+            syz_createSource3D(&mut h as *mut syz_Handle, context.to_syz_handle())
+        })?;
         Ok(Source3D(Handle(h)))
     }
 
@@ -43,8 +45,8 @@ impl Source3D {
     source_common!();
 }
 
-impl ToHandle for Source3D {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for Source3D {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

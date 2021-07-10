@@ -10,7 +10,9 @@ pub struct BufferGenerator(Handle);
 impl BufferGenerator {
     pub fn new(context: &Context) -> Result<BufferGenerator> {
         let mut h = 0;
-        check_error(unsafe { syz_createBufferGenerator(&mut h as *mut u64, context.to_handle()) })?;
+        check_error(unsafe {
+            syz_createBufferGenerator(&mut h as *mut u64, context.to_syz_handle())
+        })?;
         Ok(BufferGenerator(Handle(h)))
     }
 
@@ -26,8 +28,8 @@ impl BufferGenerator {
     pausable_common!();
 }
 
-impl ToHandle for BufferGenerator {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for BufferGenerator {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

@@ -59,8 +59,8 @@ impl Default for RouteConfig {
 mod route_traits {
     use super::*;
 
-    pub trait RouteInput: ToHandle {}
-    pub trait RouteOutput: ToHandle {}
+    pub trait RouteInput: ToSyzHandle {}
+    pub trait RouteOutput: ToSyzHandle {}
 }
 pub(crate) use route_traits::*;
 

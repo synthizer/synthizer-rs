@@ -20,7 +20,7 @@ impl StreamingGenerator {
 
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createStreamingGeneratorFromFile(&mut h, context.to_handle(), c_str.as_ptr())
+            syz_createStreamingGeneratorFromFile(&mut h, context.to_syz_handle(), c_str.as_ptr())
         })?;
         Ok(StreamingGenerator(Handle(h)))
     }
@@ -35,8 +35,8 @@ impl StreamingGenerator {
     pausable_common!();
 }
 
-impl ToHandle for StreamingGenerator {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for StreamingGenerator {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }

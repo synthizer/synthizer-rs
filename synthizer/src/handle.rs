@@ -27,15 +27,15 @@ mod to_handle {
     /// Internal helper trait to convert things to handles.  We don't use `From`
     /// because that's public: people should be using the bindings, not converting
     /// handles directly.
-    pub trait ToHandle {
-        fn to_handle(&self) -> syz_Handle;
+    pub trait ToSyzHandle {
+        fn to_syz_handle(&self) -> syz_Handle;
     }
 }
 
 pub(crate) use to_handle::*;
 
-impl ToHandle for Handle {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for Handle {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0
     }
 }

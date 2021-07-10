@@ -12,7 +12,7 @@ impl GlobalFdnReverb {
     pub fn new(context: &Context) -> Result<GlobalFdnReverb> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createGlobalFdnReverb(&mut h as *mut syz_Handle, context.to_handle())
+            syz_createGlobalFdnReverb(&mut h as *mut syz_Handle, context.to_syz_handle())
         })?;
         Ok(GlobalFdnReverb(Handle(h)))
     }
@@ -64,8 +64,8 @@ impl GlobalFdnReverb {
     effect_common!();
 }
 
-impl ToHandle for GlobalFdnReverb {
-    fn to_handle(&self) -> syz_Handle {
+impl ToSyzHandle for GlobalFdnReverb {
+    fn to_syz_handle(&self) -> syz_Handle {
         self.0 .0
     }
 }
