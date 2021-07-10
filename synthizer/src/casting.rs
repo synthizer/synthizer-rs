@@ -11,6 +11,12 @@ macro_rules! downcast {
                 <$t2>::from_handle_internal(input.into_handle())
             }
         }
+
+        impl From<&$t1> for $t2 {
+            fn from(other: &$t1) -> $t2 {
+                <$t2>::from_handle_internal(other.handle_ref().clone())
+            }
+        }
     };
 
     // And this one to support running it on a whole list of types, from most to least derived.
@@ -39,6 +45,13 @@ mod cast_target {
         fn cast_from(h: &Handle) -> Result<Option<Self>>;
     }
 }
+
+impl CastTarget for Handle {
+    fn cast_from(h: &Handle) -> Result<Option<Handle>> {
+        Ok(Some(h.handle_ref().clone()))
+    }
+}
+
 pub(crate) use cast_target::*;
 
 /// Macro to allow trying to cast to a given type from a list of type constants it supports.
