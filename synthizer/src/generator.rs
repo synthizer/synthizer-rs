@@ -17,8 +17,12 @@ impl Generator {
 
 handle_traits!(Generator);
 
-/// A marker trait for anything that can be a generator.
-pub trait IsGenerator: ToSyzHandle {}
+mod is_generator {
+    use super::*;
+    /// A marker trait for anything that can be a generator.
+    pub trait IsGenerator: ToSyzHandle {}
+}
+pub(crate) use is_generator::*;
 
 // These traits are about making it impossible to do things we know aren't
 // possible.  Since Synthizer also validates, let's allow people to use `Handle`
