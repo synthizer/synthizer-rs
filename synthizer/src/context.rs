@@ -1,6 +1,7 @@
 //! The `Context`.
 use synthizer_sys::*;
 
+use crate::casting::*;
 use crate::errors::*;
 use crate::events;
 use crate::handle::*;

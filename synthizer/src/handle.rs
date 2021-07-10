@@ -1,5 +1,6 @@
 use synthizer_sys::*;
 
+use crate::casting::*;
 use crate::errors::*;
 use crate::*;
 
@@ -21,6 +22,14 @@ impl Handle {
             syz_handleGetObjectType(&mut out as *mut i32, self.to_syz_handle())
         })?;
         Ok(unsafe { std::mem::transmute(out) })
+    }
+
+    /// Try to cast this object to another object type.  Will return
+    /// `Ok(None)` if this is because of a type mismatch, otherwise `Err`.
+    /// Clones `self` on success in order to prevent throwing the object
+    /// away on error.
+    pub fn cast_to<T: CastTarget>(&self) -> Result<Option<T>> {
+        T::cast_from(self.handle_ref())
     }
 
     pub(crate) fn from_handle_internal(h: Handle) -> Handle {

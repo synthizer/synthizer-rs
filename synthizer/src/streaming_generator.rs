@@ -2,6 +2,7 @@ use std::path::Path;
 
 use synthizer_sys::*;
 
+use crate::casting::*;
 use crate::errors::*;
 use crate::handle::*;
 use crate::*;

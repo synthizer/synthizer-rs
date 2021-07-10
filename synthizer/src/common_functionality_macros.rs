@@ -15,6 +15,14 @@ macro_rules! object_common {
             self.0.get_type()
         }
 
+        /// Try to cast this object to another object type.  Will return
+        /// `Ok(None)` if this is because of a type mismatch, otherwise `Err`.
+        /// Clones `self` on success in order to prevent throwing the object
+        /// away on error.
+        pub fn cast_to<T: CastTarget>(&self) -> Result<Option<T>> {
+            T::cast_from(self.handle_ref())
+        }
+
         /// Internal function to get objects from handles, used in
         /// casting.rs to enable casting from impls behind a macro.  This
         /// can't be pub: converting a handle of the worng type to a

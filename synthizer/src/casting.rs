@@ -39,7 +39,7 @@ mod cast_target {
         fn cast_from(h: &Handle) -> Result<Option<Self>>;
     }
 }
-use cast_target::*;
+pub(crate) use cast_target::*;
 
 /// Macro to allow trying to cast to a given type from a list of type constants it supports.
 macro_rules! cast {
