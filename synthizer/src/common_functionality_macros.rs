@@ -1,6 +1,18 @@
 //! Define the "base classes" through macro magic.E.g. `source_common` is the
 //! source "base class".
 
+macro_rules! object_common {
+    () => {
+        pub fn handle(&self) -> &Handle {
+            &self.0
+        }
+
+        pub fn into_handle(self) -> Handle {
+            self.0
+        }
+    }
+}
+
 macro_rules! pausable_common {
     () => {
         pub fn pause(&self) -> Result<()> {

@@ -20,6 +20,7 @@ impl DirectSource {
 
     source_properties!();
 
+    object_common!();
     pausable_common!();
     source_common!();
 }

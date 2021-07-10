@@ -62,6 +62,8 @@ impl GlobalFdnReverb {
     );
 
     effect_common!();
+
+    object_common!();
 }
 
 impl ToSyzHandle for GlobalFdnReverb {

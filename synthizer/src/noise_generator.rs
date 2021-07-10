@@ -19,6 +19,7 @@ impl NoiseGenerator {
     generator_properties!();
     enum_p!(NoiseType, SYZ_P_NOISE_TYPE, get_noise_type, set_noise_type);
 
+    object_common!();
     pausable_common!();
 }
 

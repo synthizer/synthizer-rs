@@ -25,6 +25,7 @@ impl BufferGenerator {
     );
     object_p!(SYZ_P_BUFFER, set_buffer);
 
+    object_common!();
     pausable_common!();
 }
 

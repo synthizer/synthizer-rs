@@ -117,6 +117,7 @@ impl Context {
     double3_p!(SYZ_P_POSITION, get_position, set_position);
     double6_p!(SYZ_P_ORIENTATION, get_orientation, set_orientation);
 
+    object_common!();
     pausable_common!();
 }
 

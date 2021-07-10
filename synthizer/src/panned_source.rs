@@ -29,6 +29,7 @@ impl PannedSource {
     double_p!(SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
     double_p!(SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
 
+    object_common!();
     pausable_common!();
     source_common!();
 }

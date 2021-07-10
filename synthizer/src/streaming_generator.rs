@@ -32,6 +32,7 @@ impl StreamingGenerator {
         set_playback_position
     );
 
+    object_common!();
     pausable_common!();
 }
 

@@ -39,6 +39,8 @@ impl GlobalEcho {
     }
 
     effect_properties!();
+
+    object_common!();
 }
 
 impl ToSyzHandle for GlobalEcho {

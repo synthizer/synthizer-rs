@@ -4,6 +4,16 @@ use crate::errors::*;
 
 pub struct Handle(pub(crate) syz_Handle);
 
+impl Handle {
+    pub fn handle(&self) -> &Handle {
+        &self
+    }
+
+    pub fn into_handle(self) -> Handle {
+        self
+    }
+}
+
 impl Drop for Handle {
     fn drop(&mut self) {
         check_error(unsafe { syz_handleDecRef(self.0) })
@@ -18,6 +28,7 @@ impl Clone for Handle {
         Handle(self.0)
     }
 }
+
 
 // A weird workaround to keep the `ToHandle` trait private.  I actually don't
 // understand why this works, but it does.

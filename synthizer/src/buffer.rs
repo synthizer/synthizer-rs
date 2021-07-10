@@ -45,6 +45,8 @@ impl Buffer {
         check_error(unsafe { syz_bufferGetChannels(&mut out as *mut u32, self.to_syz_handle()) })?;
         Ok(out)
     }
+
+    object_common!();
 }
 
 impl ToSyzHandle for Buffer {
