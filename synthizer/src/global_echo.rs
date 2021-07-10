@@ -5,7 +5,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct GlobalEcho(Handle);
+pub struct GlobalEcho(pub(crate) Handle);
 
 /// Re-exported Synthizer `syz_EchoTapConfig` type.  Using this instead of a
 /// dedicated struct prevents needing to clone your taps on the way to

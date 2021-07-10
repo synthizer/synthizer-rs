@@ -6,7 +6,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct GlobalFdnReverb(Handle);
+pub struct GlobalFdnReverb(pub(crate) Handle);
 
 impl GlobalFdnReverb {
     pub fn new(context: &Context) -> Result<GlobalFdnReverb> {

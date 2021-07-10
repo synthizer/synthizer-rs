@@ -5,7 +5,7 @@ use crate::errors::*;
 use crate::handle::*;
 
 #[derive(Clone)]
-pub struct BufferGenerator(Handle);
+pub struct BufferGenerator(pub(crate) Handle);
 
 impl BufferGenerator {
     pub fn new(context: &Context) -> Result<BufferGenerator> {

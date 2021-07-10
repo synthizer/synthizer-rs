@@ -7,7 +7,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct Source3D(Handle);
+pub struct Source3D(pub(crate) Handle);
 
 impl Source3D {
     pub fn new(context: &Context) -> Result<Source3D> {

@@ -12,6 +12,10 @@ impl Handle {
     pub fn into_handle(self) -> Handle {
         self
     }
+
+    pub(crate) fn from_handle_internal(h: Handle) -> Handle {
+        h
+    }
 }
 
 impl Drop for Handle {
@@ -28,7 +32,6 @@ impl Clone for Handle {
         Handle(self.0)
     }
 }
-
 
 // A weird workaround to keep the `ToHandle` trait private.  I actually don't
 // understand why this works, but it does.

@@ -7,7 +7,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct PannedSource(Handle);
+pub struct PannedSource(pub(crate) Handle);
 
 impl PannedSource {
     pub fn new(context: &Context) -> Result<PannedSource> {

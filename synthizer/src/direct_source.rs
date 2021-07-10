@@ -7,7 +7,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct DirectSource(Handle);
+pub struct DirectSource(pub(crate) Handle);
 
 impl DirectSource {
     pub fn new(context: &Context) -> Result<DirectSource> {

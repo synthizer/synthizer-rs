@@ -7,7 +7,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct StreamingGenerator(Handle);
+pub struct StreamingGenerator(pub(crate) Handle);
 
 impl StreamingGenerator {
     pub fn from_file<P: AsRef<Path>>(context: &Context, path: P) -> Result<StreamingGenerator> {

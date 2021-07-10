@@ -5,7 +5,7 @@ use crate::handle::*;
 use crate::*;
 
 #[derive(Clone)]
-pub struct NoiseGenerator(Handle);
+pub struct NoiseGenerator(pub(crate) Handle);
 
 impl NoiseGenerator {
     pub fn new(context: &Context, channels: u32) -> Result<NoiseGenerator> {

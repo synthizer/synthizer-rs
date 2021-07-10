@@ -6,7 +6,7 @@ use crate::errors::*;
 use crate::handle::*;
 
 #[derive(Clone)]
-pub struct Buffer(Handle);
+pub struct Buffer(pub(crate) Handle);
 
 impl Buffer {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Buffer> {

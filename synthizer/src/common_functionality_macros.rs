@@ -10,7 +10,18 @@ macro_rules! object_common {
         pub fn into_handle(self) -> Handle {
             self.0
         }
-    }
+
+        /// Internal function to get objects from handles, used in
+        /// casting.rs to enable casting from impls behind a macro.  This
+        /// can't be pub: converting a handle of the worng type to a
+        /// specific object breaks Synthizer, though only in the sensse that
+        /// the object will always error, and not in the sense of crashing
+        /// the process.
+        #[allow(dead_code)]
+        pub(crate) fn from_handle_internal(h: Handle) -> Self {
+            Self(h)
+        }
+    };
 }
 
 macro_rules! pausable_common {
