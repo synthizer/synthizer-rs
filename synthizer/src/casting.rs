@@ -19,9 +19,9 @@ macro_rules! downcast {
 }
 
 downcast!(Buffer, Handle);
-downcast!(BufferGenerator, Handle);
-downcast!(DirectSource, Handle);
-downcast!(NoiseGenerator, Handle);
+downcast!(BufferGenerator, Generator, Handle);
+downcast!(DirectSource, Source, Handle);
+downcast!(NoiseGenerator, Generator, Handle);
 downcast!(PannedSource, Source, Handle);
 downcast!(Source3D, Source, Handle);
-downcast!(StreamingGenerator, Source, Handle);
+downcast!(StreamingGenerator, Generator, Handle);

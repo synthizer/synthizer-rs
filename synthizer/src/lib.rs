@@ -32,6 +32,7 @@ pub use direct_source::*;
 pub use enums::*;
 pub use errors::*;
 pub use events::*;
+pub use generator::*;
 pub use global_echo::*;
 pub use global_fdn_reverb::*;
 pub use handle::*;
