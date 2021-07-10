@@ -1,6 +1,7 @@
 use synthizer_sys::*;
 
 use crate::errors::*;
+use crate::*;
 
 pub struct Handle(pub(crate) syz_Handle);
 
@@ -11,6 +12,15 @@ impl Handle {
 
     pub fn into_handle(self) -> Handle {
         self
+    }
+
+    /// Get the object's type if possible.  THis function will fail if Synthizer is not initialized.
+    pub fn get_type(&self) -> Result<ObjectType> {
+        let mut out = 0;
+        check_error(unsafe {
+            syz_handleGetObjectType(&mut out as *mut i32, self.to_syz_handle())
+        })?;
+        Ok(unsafe { std::mem::transmute(out) })
     }
 
     pub(crate) fn from_handle_internal(h: Handle) -> Handle {

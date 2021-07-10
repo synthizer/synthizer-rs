@@ -11,6 +11,10 @@ macro_rules! object_common {
             self.0
         }
 
+        pub fn get_type(&self) -> Result<ObjectType> {
+            self.0.get_type()
+        }
+
         /// Internal function to get objects from handles, used in
         /// casting.rs to enable casting from impls behind a macro.  This
         /// can't be pub: converting a handle of the worng type to a

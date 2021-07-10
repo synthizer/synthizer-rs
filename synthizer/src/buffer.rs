@@ -4,6 +4,7 @@ use synthizer_sys::*;
 
 use crate::errors::*;
 use crate::handle::*;
+use crate::*;
 
 #[derive(Clone)]
 pub struct Buffer(pub(crate) Handle);

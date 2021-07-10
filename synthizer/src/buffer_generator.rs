@@ -1,5 +1,6 @@
 use synthizer_sys::*;
 
+use crate::*;
 use crate::context::*;
 use crate::errors::*;
 use crate::handle::*;
