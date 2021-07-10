@@ -1,9 +1,9 @@
 use synthizer_sys::*;
 
-use crate::*;
 use crate::context::*;
 use crate::errors::*;
 use crate::handle::*;
+use crate::*;
 
 #[derive(Clone)]
 pub struct BufferGenerator(pub(crate) Handle);
