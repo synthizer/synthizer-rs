@@ -46,4 +46,4 @@ impl Source3D {
     source_common!();
 }
 
-to_syz_handle!(Source3D);
+handle_traits!(Source3D);

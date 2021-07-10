@@ -45,7 +45,7 @@ impl Clone for Handle {
 
 // A weird workaround to keep the `ToHandle` trait private.  I actually don't
 // understand why this works, but it does.
-mod to_handle {
+mod priv_traits {
     use super::*;
 
     /// Internal helper trait to convert things to handles.  We don't use `From`
@@ -54,9 +54,14 @@ mod to_handle {
     pub trait ToSyzHandle {
         fn to_syz_handle(&self) -> syz_Handle;
     }
+
+    /// Trait to get a reference to the handle.
+    pub trait HandleRef {
+        fn handle_ref(&self) -> &Handle;
+    }
 }
 
-pub(crate) use to_handle::*;
+pub(crate) use priv_traits::*;
 
 impl ToSyzHandle for Handle {
     fn to_syz_handle(&self) -> syz_Handle {
@@ -64,11 +69,23 @@ impl ToSyzHandle for Handle {
     }
 }
 
-macro_rules! to_syz_handle {
+impl HandleRef for Handle {
+    fn handle_ref(&self) -> &Handle {
+        &self
+    }
+}
+
+macro_rules! handle_traits {
     ($t: ty) => {
         impl ToSyzHandle for $t {
             fn to_syz_handle(&self) -> syz_Handle {
                 self.0 .0
+            }
+        }
+
+        impl HandleRef for $t {
+            fn handle_ref(&self) -> &Handle {
+                &self.0
             }
         }
     };

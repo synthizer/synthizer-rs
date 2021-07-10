@@ -30,4 +30,4 @@ impl BufferGenerator {
     pausable_common!();
 }
 
-to_syz_handle!(BufferGenerator);
+handle_traits!(BufferGenerator);

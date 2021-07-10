@@ -23,4 +23,4 @@ impl NoiseGenerator {
     pausable_common!();
 }
 
-to_syz_handle!(NoiseGenerator);
+handle_traits!(NoiseGenerator);

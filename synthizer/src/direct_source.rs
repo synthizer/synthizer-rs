@@ -25,4 +25,4 @@ impl DirectSource {
     source_common!();
 }
 
-to_syz_handle!(DirectSource);
+handle_traits!(DirectSource);

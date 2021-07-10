@@ -17,4 +17,4 @@ impl Source {
     source_common!();
 }
 
-to_syz_handle!(Source);
+handle_traits!(Source);

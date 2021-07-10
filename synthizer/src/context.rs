@@ -121,4 +121,4 @@ impl Context {
     pausable_common!();
 }
 
-to_syz_handle!(Context);
+handle_traits!(Context);

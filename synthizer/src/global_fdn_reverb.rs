@@ -66,4 +66,4 @@ impl GlobalFdnReverb {
     object_common!();
 }
 
-to_syz_handle!(GlobalFdnReverb);
+handle_traits!(GlobalFdnReverb);

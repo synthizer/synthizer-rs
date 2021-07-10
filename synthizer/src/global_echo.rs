@@ -43,4 +43,4 @@ impl GlobalEcho {
     object_common!();
 }
 
-to_syz_handle!(GlobalEcho);
+handle_traits!(GlobalEcho);

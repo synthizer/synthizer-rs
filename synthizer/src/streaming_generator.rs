@@ -36,4 +36,4 @@ impl StreamingGenerator {
     pausable_common!();
 }
 
-to_syz_handle!(StreamingGenerator);
+handle_traits!(StreamingGenerator);

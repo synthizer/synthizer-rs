@@ -50,4 +50,4 @@ impl Buffer {
     object_common!();
 }
 
-to_syz_handle!(Buffer);
+handle_traits!(Buffer);

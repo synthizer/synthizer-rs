@@ -34,4 +34,4 @@ impl PannedSource {
     source_common!();
 }
 
-to_syz_handle!(PannedSource);
+handle_traits!(PannedSource);
