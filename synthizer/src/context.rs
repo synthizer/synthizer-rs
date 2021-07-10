@@ -4,6 +4,7 @@ use synthizer_sys::*;
 use crate::errors::*;
 use crate::events;
 use crate::handle::*;
+use crate::routes::*;
 use crate::*;
 
 /// The `Context` represents an audio device.
@@ -28,6 +29,35 @@ impl Context {
             context: self,
             errored: false,
         }
+    }
+
+    // Configure a route given a [RouteConfig], which can be constructed with a
+    // [RouteConfigBuilder].  Corresponds to the `syz_initRouteConfig` and
+    // `syz_routingConfigRoute` flow.
+    pub fn config_route(
+        &self,
+        output: &dyn RouteOutput,
+        input: &dyn RouteInput,
+        config: &RouteConfig,
+    ) -> Result<()> {
+        check_error(unsafe {
+            syz_routingConfigRoute(
+                self.to_handle(),
+                output.to_handle(),
+                input.to_handle(),
+                &config.0 as *const syz_RouteConfig,
+            )
+        })?;
+        Ok(())
+    }
+
+    /// Configure a route with the default settings.
+    pub fn config_route_simple(
+        &self,
+        output: &dyn RouteOutput,
+        input: &dyn RouteInput,
+    ) -> Result<()> {
+        self.config_route(output, input, &Default::default())
     }
 
     double_p!(SYZ_P_GAIN, get_gain, set_gain);

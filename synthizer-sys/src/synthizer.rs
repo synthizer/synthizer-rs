@@ -709,15 +709,15 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct syz_RouteConfig {
-    pub gain: f32,
-    pub fade_time: f32,
+    pub gain: f64,
+    pub fade_time: f64,
     pub filter: syz_BiquadConfig,
 }
 #[test]
 fn bindgen_test_layout_syz_RouteConfig() {
     assert_eq!(
         ::std::mem::size_of::<syz_RouteConfig>(),
-        64usize,
+        72usize,
         concat!("Size of: ", stringify!(syz_RouteConfig))
     );
     assert_eq!(
@@ -737,7 +737,7 @@ fn bindgen_test_layout_syz_RouteConfig() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<syz_RouteConfig>())).fade_time as *const _ as usize },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(syz_RouteConfig),
@@ -747,7 +747,7 @@ fn bindgen_test_layout_syz_RouteConfig() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<syz_RouteConfig>())).filter as *const _ as usize },
-        8usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(syz_RouteConfig),
@@ -764,7 +764,7 @@ extern "C" {
         context: syz_Handle,
         output: syz_Handle,
         input: syz_Handle,
-        config: *mut syz_RouteConfig,
+        config: *const syz_RouteConfig,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -772,7 +772,7 @@ extern "C" {
         context: syz_Handle,
         output: syz_Handle,
         input: syz_Handle,
-        fade_out: f32,
+        fade_out: f64,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -784,20 +784,20 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct syz_EchoTapConfig {
-    pub delay: f32,
-    pub gain_l: f32,
-    pub gain_r: f32,
+    pub delay: f64,
+    pub gain_l: f64,
+    pub gain_r: f64,
 }
 #[test]
 fn bindgen_test_layout_syz_EchoTapConfig() {
     assert_eq!(
         ::std::mem::size_of::<syz_EchoTapConfig>(),
-        12usize,
+        24usize,
         concat!("Size of: ", stringify!(syz_EchoTapConfig))
     );
     assert_eq!(
         ::std::mem::align_of::<syz_EchoTapConfig>(),
-        4usize,
+        8usize,
         concat!("Alignment of ", stringify!(syz_EchoTapConfig))
     );
     assert_eq!(
@@ -812,7 +812,7 @@ fn bindgen_test_layout_syz_EchoTapConfig() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<syz_EchoTapConfig>())).gain_l as *const _ as usize },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(syz_EchoTapConfig),
@@ -822,7 +822,7 @@ fn bindgen_test_layout_syz_EchoTapConfig() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<syz_EchoTapConfig>())).gain_r as *const _ as usize },
-        8usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(syz_EchoTapConfig),

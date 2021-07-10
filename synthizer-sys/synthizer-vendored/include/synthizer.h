@@ -308,8 +308,8 @@ typedef int syz_StreamSeekCallback(unsigned long long pos, void *userdata, const
 typedef int syz_StreamCloseCallback(void *userdata, const char **err_msg);
 
 /**
- * The stream destroy callback is optional and is called when the steraam will
- * no longer be used.  Thhis primarily exists for bindinggs developers so that
+ * The stream destroy callback is optional and is called when the stream will
+ * no longer be used.  This primarily exists for bindings developers so that
  * they can keep error messages alive long enough and make sure the stream always dies.  Note that this is called if `syz_createStreamHandleFromCustomStream` fails as well, in the calling thread.
  * */
 typedef void syz_StreamDestroyCallback(void *userdata);
@@ -457,8 +457,8 @@ SYZ_CAPI syz_ErrorCode syz_createNoiseGenerator(syz_Handle *out, syz_Handle cont
 
 /* Initialize with syz_initRouteConfig before using. */
 struct syz_RouteConfig {
-	float gain;
-	float fade_time;
+	double gain;
+	double fade_time;
 	struct syz_BiquadConfig filter;
 };
 
@@ -473,17 +473,17 @@ struct syz_RouteConfig {
  * */
 SYZ_CAPI syz_ErrorCode syz_initRouteConfig(struct syz_RouteConfig *cfg);
 
-SYZ_CAPI syz_ErrorCode syz_routingConfigRoute(syz_Handle context, syz_Handle output, syz_Handle input, struct syz_RouteConfig *config);
-SYZ_CAPI syz_ErrorCode syz_routingRemoveRoute(syz_Handle context, syz_Handle output, syz_Handle input, float fade_out);
+SYZ_CAPI syz_ErrorCode syz_routingConfigRoute(syz_Handle context, syz_Handle output, syz_Handle input, const struct syz_RouteConfig *config);
+SYZ_CAPI syz_ErrorCode syz_routingRemoveRoute(syz_Handle context, syz_Handle output, syz_Handle input, double fade_out);
 
 SYZ_CAPI syz_ErrorCode syz_effectReset(syz_Handle effect);
 
 SYZ_CAPI syz_ErrorCode syz_createGlobalEcho(syz_Handle *out, syz_Handle context);
 
 struct syz_EchoTapConfig {
-	float delay;
-	float gain_l;
-	float gain_r;
+	double delay;
+	double gain_l;
+	double gain_r;
 };
 
 SYZ_CAPI syz_ErrorCode syz_globalEchoSetTaps(syz_Handle handle, unsigned int n_taps, const struct syz_EchoTapConfig *taps);

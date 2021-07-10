@@ -224,7 +224,7 @@ SYZ_CAPI syz_ErrorCode syz_initRouteConfig(struct syz_RouteConfig *cfg) {
 	SYZ_EPILOGUE
 }
 
-SYZ_CAPI syz_ErrorCode syz_routingConfigRoute(syz_Handle context, syz_Handle output, syz_Handle input, struct syz_RouteConfig *config) {
+SYZ_CAPI syz_ErrorCode syz_routingConfigRoute(syz_Handle context, syz_Handle output, syz_Handle input, const struct syz_RouteConfig *config) {
 	(void)context;
 
 	SYZ_PROLOGUE
@@ -264,7 +264,7 @@ SYZ_CAPI syz_ErrorCode syz_routingConfigRoute(syz_Handle context, syz_Handle out
 	SYZ_EPILOGUE
 }
 
-SYZ_CAPI syz_ErrorCode syz_routingRemoveRoute(syz_Handle context, syz_Handle output, syz_Handle input, float fade_out) {
+SYZ_CAPI syz_ErrorCode syz_routingRemoveRoute(syz_Handle context, syz_Handle output, syz_Handle input, double fade_out) {
 	(void)context;
 
 	SYZ_PROLOGUE
