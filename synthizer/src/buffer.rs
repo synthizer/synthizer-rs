@@ -27,6 +27,15 @@ impl Buffer {
         Ok(Buffer(Handle::new(h)))
     }
 
+    pub fn from_stream_handle(&self, handle: StreamHandle) -> Result<Buffer> {
+        let mut h = Default::default();
+        check_error(unsafe {
+            syz_createBufferFromStreamHandle(&mut h as *mut syz_Handle, handle.get_handle())
+        })?;
+        // No need to link: buffers consume the stream entirely in the calling thread.
+        Ok(Buffer(Handle::new(h)))
+    }
+
     pub fn get_length_in_samples(&self) -> Result<u32> {
         let mut out = Default::default();
         check_error(unsafe {

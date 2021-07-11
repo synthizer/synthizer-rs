@@ -232,6 +232,10 @@ impl StreamHandle {
         })
     }
 
+    pub(crate) fn get_handle(&self) -> syz_Handle {
+        self.handle
+    }
+
     /// Consume the handle, linking it to the other handle via Synthizer's userdata support as necessary.
     pub(crate) fn link(mut self, handle: &Handle) -> Result<()> {
         if let Some((ud, free_cb)) = self.needs_drop.take() {

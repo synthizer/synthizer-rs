@@ -27,6 +27,23 @@ impl StreamingGenerator {
         Ok(StreamingGenerator(Handle::new(h)))
     }
 
+    pub fn from_stream_handle(
+        context: &Context,
+        handle: StreamHandle,
+    ) -> Result<StreamingGenerator> {
+        let mut h = Default::default();
+        check_error(unsafe {
+            syz_createStreamingGeneratorFromStreamHandle(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                handle.get_handle(),
+            )
+        })?;
+        let ret = StreamingGenerator(Handle::new(h));
+        handle.link(&ret.0)?;
+        Ok(ret)
+    }
+
     generator_properties!();
     double_p!(
         SYZ_P_PLAYBACK_POSITION,
