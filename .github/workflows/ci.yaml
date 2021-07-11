@@ -1,0 +1,20 @@
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  test:
+    runs-on: ${{matrix.os}}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: 'Run tests'
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE
+        cargo test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+          - os: ubuntu-18.04
