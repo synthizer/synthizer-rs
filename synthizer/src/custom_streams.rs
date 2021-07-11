@@ -9,7 +9,6 @@ use std::slice::from_raw_parts_mut;
 use synthizer_sys::*;
 
 use crate::errors::*;
-use crate::*;
 
 /// A trait which custom streams must implement in order to support closing.
 ///
@@ -247,15 +246,16 @@ impl StreamHandle {
         self.handle
     }
 
-    /// Consume the handle, linking it to the other handle via Synthizer's userdata support as necessary.
-    pub(crate) fn link(mut self, handle: &Handle) -> Result<()> {
-        if let Some((ud, free_cb)) = self.needs_drop.take() {
-            check_error(unsafe {
-                syz_setUserdata(handle.to_syz_handle(), ud.as_ptr(), Some(free_cb))
-            })?;
+    pub(crate) fn get_userdata(&self) -> (*mut c_void, Option<unsafe extern "C" fn(*mut c_void)>) {
+        if let Some((ud, free_cb)) = self.needs_drop {
+            (ud.as_ptr(), Some(free_cb))
+        } else {
+            (std::ptr::null_mut(), None)
         }
+    }
+
+    pub(crate) fn consume(mut self) {
         self.used = true;
-        Ok(())
     }
 }
 

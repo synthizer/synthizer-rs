@@ -47,7 +47,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
         }
 
         let parts = line.split_whitespace().collect::<Vec<_>>();
-        if parts.len() == 0 {
+        if parts.is_empty() {
             continue;
         }
 

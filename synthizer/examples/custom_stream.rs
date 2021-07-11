@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
 
     if args.len() != 2 {
-        println!("SUsageL: {} <file>", args[0]);
+        println!("Usage: {} <file>", args[0]);
         return Ok(());
     }
 
