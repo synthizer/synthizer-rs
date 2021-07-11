@@ -175,10 +175,12 @@ impl Drop for CustomStreamDef {
         let mut err_msg: *const c_char = std::ptr::null();
         if !self.used {
             unsafe {
-                self.def
-                    .close_cb
-                    .map(|x| x(self.def.userdata, &mut err_msg as *mut *const c_char));
-                self.def.destroy_cb.map(|x| x(self.def.userdata));
+                if let Some(cb) = self.def.close_cb {
+                    cb(self.def.userdata, &mut err_msg as *mut *const c_char);
+                }
+                if let Some(cb) = self.def.destroy_cb {
+                    cb(self.def.userdata);
+                }
             }
         }
     }
