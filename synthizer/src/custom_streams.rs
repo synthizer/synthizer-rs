@@ -1,6 +1,7 @@
 //! Implement the infrastructure for custom streams.
 //!
 //! We actually get to do this on top of `Read` and `Seek` directly.
+use std::borrow::Borrow;
 use std::ffi::{c_void, CString};
 use std::io::{Read, Seek};
 use std::os::raw::{c_char, c_int, c_longlong, c_ulonglong};
@@ -295,6 +296,74 @@ impl Drop for StreamHandle {
         unsafe { syz_handleDecRef(self.handle) };
         if let Some((ud, cb)) = self.needs_drop {
             cb(ud.as_ptr());
+        }
+    }
+}
+
+static mut STREAM_ERR_CONSTANT: *const c_char = std::ptr::null();
+
+extern "C" fn stream_open_callback<
+    E: std::error::Error,
+    T: 'static + Send + Sync + Fn(&str, &str, usize) -> std::result::Result<CustomStreamDef, E>,
+>(
+    out: *mut syz_CustomStreamDef,
+    protocol: *const c_char,
+    path: *const c_char,
+    param: *mut c_void,
+    userdata: *mut c_void,
+    err_msg: *mut *const c_char,
+) -> c_int {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        let cstr = std::ffi::CString::new("Unable to create stream").unwrap();
+        unsafe { STREAM_ERR_CONSTANT = cstr.into_raw() };
+    });
+
+    let protocol = unsafe { std::ffi::CStr::from_ptr(protocol) };
+    let path = unsafe { std::ffi::CStr::from_ptr(path) };
+    let protocol = protocol.to_string_lossy();
+    let path = path.to_string_lossy();
+    let param: usize = unsafe { std::mem::transmute(param) };
+
+    let cb: Box<T> = unsafe { Box::from_raw(userdata as *mut T) };
+    let res = cb(protocol.borrow(), path.borrow(), param);
+    // Be sure not to drop the callback.
+    Box::into_raw(cb);
+
+    match res {
+        Ok(s) => {
+            unsafe { *out = s.def };
+            0
+        }
+        Err(_) => {
+            unsafe { *err_msg = STREAM_ERR_CONSTANT };
+            1
+        }
+    }
+}
+
+pub fn register_stream_protocol<
+    E: std::error::Error,
+    T: 'static + Send + Sync + Fn(&str, &str, usize) -> std::result::Result<CustomStreamDef, E>,
+>(
+    protocol: &str,
+    callback: T,
+) -> Result<()> {
+    let protocol_c = std::ffi::CString::new(protocol)
+        .map_err(|_| Error::rust_error("Unable to convert protocol to a C string"))?;
+    let leaked = Box::into_raw(Box::new(callback));
+    let res = check_error(unsafe {
+        syz_registerStreamProtocol(
+            protocol_c.as_ptr(),
+            Some(stream_open_callback::<E, T>),
+            leaked as *mut c_void,
+        )
+    });
+    match res {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            unsafe { Box::from_raw(leaked) };
+            Err(e)
         }
     }
 }
