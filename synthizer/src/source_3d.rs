@@ -27,6 +27,12 @@ impl Source3D {
 
     source_properties!();
     enum_p!(
+        PannerStrategy,
+        SYZ_P_PANNER_STRATEGY,
+        get_panner_strategy,
+        set_panner_strategy
+    );
+    enum_p!(
         DistanceModel,
         SYZ_P_DISTANCE_MODEL,
         get_distance_model,
