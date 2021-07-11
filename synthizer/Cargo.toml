@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 synthizer-sys={"path"= "../synthizer-sys"}
+
+# for examples that need multiple error types.
+anyhow = "1.0.42"

@@ -15,7 +15,7 @@ use crate::*;
 ///
 /// Rust's stdlib has no concept of closing in it, but simply dropping values leads to panics.  This trait is therefore required to implement closing.
 pub trait CloseStream {
-    fn close(&self) -> std::result::Result<(), Box<dyn std::fmt::Display>>;
+    fn close(&mut self) -> std::result::Result<(), Box<dyn std::fmt::Display>>;
 }
 
 /// Marker trait for types which implement non-seekable streams.
@@ -190,7 +190,7 @@ pub struct StreamHandle {
 }
 
 impl StreamHandle {
-    pub fn from_custom(mut def: CustomStreamDef) -> Result<StreamHandle> {
+    pub fn from_stream_def(mut def: CustomStreamDef) -> Result<StreamHandle> {
         let mut h = Default::default();
         check_error(unsafe {
             syz_createStreamHandleFromCustomStream(
