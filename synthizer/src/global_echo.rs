@@ -18,7 +18,9 @@ pub type EchoTapConfig = syz_EchoTapConfig;
 impl GlobalEcho {
     pub fn new(context: &Context) -> Result<GlobalEcho> {
         let mut h = Default::default();
-        check_error(unsafe { syz_createGlobalEcho(&mut h, context.to_syz_handle()) })?;
+        check_error(unsafe {
+            syz_createGlobalEcho(&mut h, context.to_syz_handle(), std::ptr::null_mut(), None)
+        })?;
         Ok(GlobalEcho(Handle::new(h)))
     }
 

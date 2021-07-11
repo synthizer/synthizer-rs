@@ -15,7 +15,12 @@ impl Source3D {
     pub fn new(context: &Context) -> Result<Source3D> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createSource3D(&mut h as *mut syz_Handle, context.to_syz_handle())
+            syz_createSource3D(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(Source3D(Handle::new(h)))
     }

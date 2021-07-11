@@ -199,6 +199,8 @@ impl StreamHandle {
             syz_createStreamHandleFromCustomStream(
                 &mut h as *mut syz_Handle,
                 &mut def.def as *mut syz_CustomStreamDef,
+                std::ptr::null_mut(),
+                None,
             )
         })?;
         def.used = true;
@@ -218,7 +220,13 @@ impl StreamHandle {
         let mut h = Default::default();
         check_error(unsafe {
             let ptr = &data[0] as *const u8 as *const i8;
-            syz_createStreamHandleFromMemory(&mut h as *mut syz_Handle, data.len() as u64, ptr)
+            syz_createStreamHandleFromMemory(
+                &mut h as *mut syz_Handle,
+                data.len() as u64,
+                ptr,
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
 
         Ok(StreamHandle {

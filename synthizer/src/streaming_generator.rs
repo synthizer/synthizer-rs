@@ -22,7 +22,13 @@ impl StreamingGenerator {
 
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createStreamingGeneratorFromFile(&mut h, context.to_syz_handle(), c_str.as_ptr())
+            syz_createStreamingGeneratorFromFile(
+                &mut h,
+                context.to_syz_handle(),
+                c_str.as_ptr(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(StreamingGenerator(Handle::new(h)))
     }
@@ -37,6 +43,8 @@ impl StreamingGenerator {
                 &mut h as *mut syz_Handle,
                 context.to_syz_handle(),
                 handle.get_handle(),
+                std::ptr::null_mut(),
+                None,
             )
         })?;
         let ret = StreamingGenerator(Handle::new(h));

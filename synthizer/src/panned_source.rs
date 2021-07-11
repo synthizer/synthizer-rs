@@ -16,7 +16,12 @@ impl PannedSource {
     pub fn new(context: &Context) -> Result<PannedSource> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createPannedSource(&mut h as *mut syz_Handle, context.to_syz_handle())
+            syz_createPannedSource(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(PannedSource(Handle::new(h)))
     }

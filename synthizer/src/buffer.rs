@@ -23,7 +23,12 @@ impl Buffer {
 
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createBufferFromFile(&mut h as *mut syz_Handle, c_str.as_ptr())
+            syz_createBufferFromFile(
+                &mut h as *mut syz_Handle,
+                c_str.as_ptr(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(Buffer(Handle::new(h)))
     }
@@ -35,6 +40,8 @@ impl Buffer {
                 &mut h as *mut syz_Handle,
                 data.len() as c_ulonglong,
                 &data[0] as *const u8 as *const i8,
+                std::ptr::null_mut(),
+                None,
             )
         })?;
         Ok(Buffer(Handle::new(h)))
@@ -63,6 +70,8 @@ impl Buffer {
                 channels,
                 data.len() as c_ulonglong / channels as c_ulonglong,
                 &data[0] as *const f32,
+                std::ptr::null_mut(),
+                None,
             )
         })?;
         Ok(Buffer(Handle::new(h)))
@@ -71,7 +80,12 @@ impl Buffer {
     pub fn from_stream_handle(&self, handle: StreamHandle) -> Result<Buffer> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createBufferFromStreamHandle(&mut h as *mut syz_Handle, handle.get_handle())
+            syz_createBufferFromStreamHandle(
+                &mut h as *mut syz_Handle,
+                handle.get_handle(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         // No need to link: buffers consume the stream entirely in the calling thread.
         Ok(Buffer(Handle::new(h)))

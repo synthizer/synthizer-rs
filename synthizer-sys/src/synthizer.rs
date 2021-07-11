@@ -433,10 +433,18 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createContext(out: *mut syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createContext(
+        out: *mut syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createContextHeadless(out: *mut syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createContextHeadless(
+        out: *mut syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_contextGetBlock(context: syz_Handle, block: *mut f32) -> syz_ErrorCode;
@@ -457,6 +465,8 @@ extern "C" {
         protocol: *const ::std::os::raw::c_char,
         path: *const ::std::os::raw::c_char,
         param: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -464,12 +474,16 @@ extern "C" {
         out: *mut syz_Handle,
         data_len: ::std::os::raw::c_ulonglong,
         data: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_createStreamHandleFromFile(
         out: *mut syz_Handle,
         path: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 pub type syz_StreamReadCallback = ::std::option::Option<
@@ -588,6 +602,8 @@ extern "C" {
     pub fn syz_createStreamHandleFromCustomStream(
         out: *mut syz_Handle,
         callbacks: *mut syz_CustomStreamDef,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 pub type syz_StreamOpenCallback = ::std::option::Option<
@@ -614,6 +630,8 @@ extern "C" {
         protocol: *const ::std::os::raw::c_char,
         path: *const ::std::os::raw::c_char,
         param: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -621,6 +639,8 @@ extern "C" {
         out: *mut syz_Handle,
         context: syz_Handle,
         path: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -628,6 +648,8 @@ extern "C" {
         out: *mut syz_Handle,
         context: syz_Handle,
         stream: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -636,6 +658,8 @@ extern "C" {
         protocol: *const ::std::os::raw::c_char,
         path: *const ::std::os::raw::c_char,
         param: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -643,6 +667,8 @@ extern "C" {
         out: *mut syz_Handle,
         data_len: ::std::os::raw::c_ulonglong,
         data: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -652,18 +678,24 @@ extern "C" {
         channels: ::std::os::raw::c_uint,
         frames: ::std::os::raw::c_ulonglong,
         data: *const f32,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_createBufferFromFile(
         out: *mut syz_Handle,
         path: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_createBufferFromStreamHandle(
         out: *mut syz_Handle,
         stream: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
@@ -682,7 +714,12 @@ extern "C" {
     pub fn syz_bufferGetLengthInSeconds(out: *mut f64, buffer: syz_Handle) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createBufferGenerator(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createBufferGenerator(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_sourceAddGenerator(source: syz_Handle, generator: syz_Handle) -> syz_ErrorCode;
@@ -691,19 +728,36 @@ extern "C" {
     pub fn syz_sourceRemoveGenerator(source: syz_Handle, generator: syz_Handle) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createDirectSource(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createDirectSource(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createPannedSource(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createPannedSource(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createSource3D(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createSource3D(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 extern "C" {
     pub fn syz_createNoiseGenerator(
         out: *mut syz_Handle,
         context: syz_Handle,
         channels: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 #[repr(C)]
@@ -779,7 +833,12 @@ extern "C" {
     pub fn syz_effectReset(effect: syz_Handle) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createGlobalEcho(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createGlobalEcho(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
@@ -839,5 +898,10 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_createGlobalFdnReverb(out: *mut syz_Handle, context: syz_Handle) -> syz_ErrorCode;
+    pub fn syz_createGlobalFdnReverb(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
 }

@@ -15,7 +15,12 @@ impl GlobalFdnReverb {
     pub fn new(context: &Context) -> Result<GlobalFdnReverb> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createGlobalFdnReverb(&mut h as *mut syz_Handle, context.to_syz_handle())
+            syz_createGlobalFdnReverb(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(GlobalFdnReverb(Handle::new(h)))
     }

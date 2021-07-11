@@ -26,12 +26,39 @@ void setCThreadError(syz_ErrorCode error, const char *message) {
 }
 
 /**
- * Set to 1 after the first library initializastion.
+ * Set to 0 after the first library initialization. Thereafter, incremented
+ * every time a function which requires Synthizer initialization enters the
+ * library and decremented when they exit.
+ *
+ * When the library is uninitialized, set to -2 to prevent double init per
+ * process.
  * */
-std::atomic<int> is_initialized = 0;
+std::atomic<int> is_initialized = -1;
 
-bool isInitialized() {
-	return is_initialized.load(std::memory_order_relaxed) != 0;
+void beginInitializedCall(bool require_init) {
+	if (require_init == false) {
+		return;
+	}
+
+	int expected = is_initialized.load(std::memory_order_relaxed);
+
+	if (expected < 0) {
+		throw EUninitialized();
+	}
+
+	while (is_initialized.compare_exchange_strong(expected, expected + 1, std::memory_order_relaxed, std::memory_order_relaxed) == false) {
+		if (expected < 0) {
+			throw EUninitialized();
+		}
+	}
+}
+
+void endInitializedCall(bool require_init) {
+	if (require_init == false) {
+		return;
+	}
+
+	assert(is_initialized.fetch_sub(1, std::memory_order_relaxed) >= 0);
 }
 
 }
@@ -52,6 +79,10 @@ SYZ_CAPI syz_ErrorCode syz_initialize(void) {
 SYZ_CAPI syz_ErrorCode syz_initializeWithConfig(const struct syz_LibraryConfig *config) {
 	SYZ_PROLOGUE_UNINIT
 
+	if (is_initialized.load(std::memory_order_relaxed) != -1) {
+		throw Error("Library has already been initialized in this process");
+	}
+
 	switch (config->logging_backend) {
 	case SYZ_LOGGING_BACKEND_NONE:
 		break;
@@ -71,7 +102,7 @@ SYZ_CAPI syz_ErrorCode syz_initializeWithConfig(const struct syz_LibraryConfig *
 		loadLibsndfile(config->libsndfile_path);
 	}
 
-	is_initialized.store(1, std::memory_order_relaxed);
+	is_initialized.store(0, std::memory_order_relaxed);
 
 	return 0;
 	SYZ_EPILOGUE
@@ -79,6 +110,16 @@ SYZ_CAPI syz_ErrorCode syz_initializeWithConfig(const struct syz_LibraryConfig *
 
 SYZ_CAPI syz_ErrorCode syz_shutdown() {
 	SYZ_PROLOGUE_UNINIT
+
+	/* Spin until we can uninitialize the library. */
+	int expected = 0;
+	while (is_initialized.compare_exchange_strong(expected, -2, std::memory_order_relaxed, std::memory_order_relaxed) != false) {
+		if (expected < 0) {
+			throw EUninitialized();
+		}
+		expected = 0;
+	}
+
 	is_initialized.store(0, std::memory_order_relaxed);
 
 	clearAllCHandles();
@@ -110,9 +151,13 @@ SYZ_CAPI syz_ErrorCode syz_handleIncRef(syz_Handle handle) {
 	 * that case, we just assume that the handle exists from the user's perspective,
 	 * which allows languages like Rust to implement infallible cloning.
 	 * */
-	if (isInitialized() == false) {
-		return 0;
-	}
+	int expected = is_initialized.load(std::memory_order_relaxed);
+	do {
+		if (expected < 0) {
+			return 0;
+		}
+	} while (is_initialized.compare_exchange_strong(expected, expected + 1, std::memory_order_relaxed, std::memory_order_relaxed) == false);
+	auto _guard = AtScopeExit([]() { is_initialized.fetch_sub(1, std::memory_order_relaxed); });
 
 	auto h = fromC<CExposable>(handle);
 	h->incRef();
@@ -124,14 +169,17 @@ SYZ_CAPI syz_ErrorCode syz_handleDecRef(syz_Handle handle) {
 	SYZ_PROLOGUE_UNINIT
 
 	/**
-	 * If the library is uninitialized, no handle can exist. But it is useful
-	 * for languages to be able to implement infallible freeing so, in that
-	 * case, just pretend that it did and succeed. Note that all other functions
-	 * will error, so the behavior of this handle existing or not is the same.
+	 * If the library is uninitialized, all other functions will return an error. In
+	 * that case, we just assume that the handle exists from the user's perspective,
+	 * which allows languages like Rust to implement infallible cloning.
 	 * */
-	if (isInitialized() == false) {
-		return 0;
-	}
+	int expected = is_initialized.load(std::memory_order_relaxed);
+	do {
+		if (expected < 0) {
+			return 0;
+		}
+	} while (is_initialized.compare_exchange_strong(expected, expected + 1, std::memory_order_relaxed, std::memory_order_relaxed) == false);
+	auto _guard = AtScopeExit([]() { is_initialized.fetch_sub(1, std::memory_order_relaxed); });
 
 	if (handle == 0) {
 		return 0;

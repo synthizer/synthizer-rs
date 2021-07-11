@@ -14,7 +14,13 @@ impl NoiseGenerator {
     pub fn new(context: &Context, channels: u32) -> Result<NoiseGenerator> {
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createNoiseGenerator(&mut h as *mut syz_Handle, context.to_syz_handle(), channels)
+            syz_createNoiseGenerator(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                channels,
+                std::ptr::null_mut(),
+                None,
+            )
         })?;
         Ok(NoiseGenerator(Handle::new(h)))
     }
