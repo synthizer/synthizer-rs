@@ -40,24 +40,28 @@ impl Buffer {
         Ok(Buffer(Handle::new(h)))
     }
 
-    pub fn from_float_array(
-        sr: c_uint,
-        channels: c_uint,
-        frames: c_ulonglong,
-        data: &[f32],
-    ) -> Result<Buffer> {
+    pub fn from_float_array(sr: c_uint, channels: c_uint, data: &[f32]) -> Result<Buffer> {
         if data.is_empty() {
             return Err(Error::rust_error(
                 "Cannot create a buffer from an empty array",
             ));
         }
+        if channels == 0 {
+            return Err(Error::rust_error("channels may not be 0"));
+        }
+        if data.len() % channels as usize != 0 {
+            return Err(Error::rust_error(
+                "Length of data must be a multiple of the channel count",
+            ));
+        }
+
         let mut h = Default::default();
         check_error(unsafe {
             syz_createBufferFromFloatArray(
                 &mut h as *mut syz_Handle,
                 sr,
                 channels,
-                frames,
+                data.len() as c_ulonglong / channels as c_ulonglong,
                 &data[0] as *const f32,
             )
         })?;
