@@ -1,4 +1,4 @@
-use std::os::raw::c_ulonglong;
+use std::os::raw::{c_uint, c_ulonglong};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -35,6 +35,30 @@ impl Buffer {
                 &mut h as *mut syz_Handle,
                 data.len() as c_ulonglong,
                 &data[0] as *const u8 as *const i8,
+            )
+        })?;
+        Ok(Buffer(Handle::new(h)))
+    }
+
+    pub fn from_float_array(
+        sr: c_uint,
+        channels: c_uint,
+        frames: c_ulonglong,
+        data: &[f32],
+    ) -> Result<Buffer> {
+        if data.is_empty() {
+            return Err(Error::rust_error(
+                "Cannot create a buffer from an empty array",
+            ));
+        }
+        let mut h = Default::default();
+        check_error(unsafe {
+            syz_createBufferFromFloatArray(
+                &mut h as *mut syz_Handle,
+                sr,
+                channels,
+                frames,
+                &data[0] as *const f32,
             )
         })?;
         Ok(Buffer(Handle::new(h)))
