@@ -1,3 +1,4 @@
+use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -51,6 +52,35 @@ impl StreamingGenerator {
         handle.consume();
         let ret = StreamingGenerator(Handle::new(h));
         Ok(ret)
+    }
+
+    pub fn from_stream_params(
+        context: &Context,
+        protocol: &str,
+        path: &str,
+        param: usize,
+    ) -> Result<StreamingGenerator> {
+        // The below transmute uses the fact that `usize` is the size of a
+        // pointer on all common platforms.
+        let mut h = Default::default();
+        let protocol_c = std::ffi::CString::new(protocol)
+            .map_err(|_| Error::rust_error("Unable to convert protocol to a C string"))?;
+        let path_c = std::ffi::CString::new(path)
+            .map_err(|_| Error::rust_error("Unable to convert path to a C string"))?;
+        let protocol_ptr = protocol_c.as_ptr();
+        let path_ptr = path_c.as_ptr();
+        check_error(unsafe {
+            syz_createStreamingGeneratorFromStreamParams(
+                &mut h as *mut syz_Handle,
+                context.to_syz_handle(),
+                protocol_ptr as *const c_char,
+                path_ptr as *const c_char,
+                std::mem::transmute(param),
+                std::ptr::null_mut(),
+                None,
+            )
+        })?;
+        Ok(StreamingGenerator(Handle::new(h)))
     }
 
     generator_properties!();

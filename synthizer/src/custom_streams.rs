@@ -242,6 +242,33 @@ impl StreamHandle {
         })
     }
 
+    pub fn from_stream_params(protocol: &str, path: &str, param: usize) -> Result<StreamHandle> {
+        // The below transmute uses the fact that `usize` is the size of a
+        // pointer on all common platforms.
+        let mut h = Default::default();
+        let protocol_c = std::ffi::CString::new(protocol)
+            .map_err(|_| Error::rust_error("Unable to convert protocol to a C string"))?;
+        let path_c = std::ffi::CString::new(path)
+            .map_err(|_| Error::rust_error("Unable to convert path to a C string"))?;
+        let protocol_ptr = protocol_c.as_ptr();
+        let path_ptr = path_c.as_ptr();
+        check_error(unsafe {
+            syz_createStreamHandleFromStreamParams(
+                &mut h as *mut syz_Handle,
+                protocol_ptr as *const c_char,
+                path_ptr as *const c_char,
+                std::mem::transmute(param),
+                std::ptr::null_mut(),
+                None,
+            )
+        })?;
+        Ok(StreamHandle {
+            handle: h,
+            needs_drop: None,
+            used: false,
+        })
+    }
+
     pub(crate) fn get_handle(&self) -> syz_Handle {
         self.handle
     }

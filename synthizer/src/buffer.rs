@@ -1,4 +1,4 @@
-use std::os::raw::{c_uint, c_ulonglong};
+use std::os::raw::{c_char, c_uint, c_ulonglong};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -88,6 +88,29 @@ impl Buffer {
             )
         })?;
         // No need to link: buffers consume the stream entirely in the calling thread.
+        Ok(Buffer(Handle::new(h)))
+    }
+
+    pub fn from_stream_params(protocol: &str, path: &str, param: usize) -> Result<Buffer> {
+        // The below transmute uses the fact that `usize` is the size of a
+        // pointer on all common platforms.
+        let mut h = Default::default();
+        let protocol_c = std::ffi::CString::new(protocol)
+            .map_err(|_| Error::rust_error("Unable to convert protocol to a C string"))?;
+        let path_c = std::ffi::CString::new(path)
+            .map_err(|_| Error::rust_error("Unable to convert path to a C string"))?;
+        let protocol_ptr = protocol_c.as_ptr();
+        let path_ptr = path_c.as_ptr();
+        check_error(unsafe {
+            syz_createBufferFromStreamParams(
+                &mut h as *mut syz_Handle,
+                protocol_ptr as *const c_char,
+                path_ptr as *const c_char,
+                std::mem::transmute(param),
+                std::ptr::null_mut(),
+                None,
+            )
+        })?;
         Ok(Buffer(Handle::new(h)))
     }
 
