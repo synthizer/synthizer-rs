@@ -217,12 +217,10 @@ impl StreamHandle {
         };
         let mut h = Default::default();
         check_error(unsafe {
-            syz_createStreamHandleFromMemory(
-                &mut h as *mut syz_Handle,
-                data.len() as u64,
-                std::mem::transmute(&data[0] as *const u8),
-            )
+            let ptr = &data[0] as *const u8 as *const i8;
+            syz_createStreamHandleFromMemory(&mut h as *mut syz_Handle, data.len() as u64, ptr)
         })?;
+
         Ok(StreamHandle {
             handle: h,
             needs_drop: Some((
