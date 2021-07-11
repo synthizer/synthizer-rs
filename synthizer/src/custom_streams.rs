@@ -158,7 +158,7 @@ impl CustomStreamDef {
     }
 
     /// Build a stream from something seekable.
-    pub fn from_seek<T: SeekableStream>(mut value: T) -> std::io::Result<CustomStreamDef> {
+    pub fn from_seekable<T: SeekableStream>(mut value: T) -> std::io::Result<CustomStreamDef> {
         let mut ret = CustomStreamDef {
             def: Default::default(),
             used: false,

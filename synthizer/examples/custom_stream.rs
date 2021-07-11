@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
     let _guard = cfg.initialize()?;
 
     let ctx = synthizer::Context::new()?;
-    let stream_def = synthizer::CustomStreamDef::from_seek(FileStream(file))?;
+    let stream_def = synthizer::CustomStreamDef::from_seekable(FileStream(file))?;
     let stream = synthizer::StreamHandle::from_stream_def(stream_def)?;
     let gen = syz::StreamingGenerator::from_stream_handle(&ctx, stream)?;
     let src = syz::DirectSource::new(&ctx)?;
