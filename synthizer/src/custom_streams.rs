@@ -130,7 +130,10 @@ fn fillout_seekable<T: SeekableStream>(
 }
 
 fn fillout_userdata<T>(dest: &mut syz_CustomStreamDef, val: T) {
-    dest.userdata = Box::into_raw(Box::new(val)) as *mut c_void;
+    dest.userdata = Box::into_raw(Box::new(CustomStreamData {
+        stream: val,
+        err_msg: Default::default(),
+    })) as *mut c_void;
 }
 
 pub struct CustomStreamDef {

@@ -37,7 +37,10 @@ fn main() -> anyhow::Result<()> {
 
     let file = std::fs::File::open(args[1].as_str())?;
 
-    let _guard = synthizer::initialize()?;
+    let mut cfg = syz::LibraryConfig::default();
+    cfg.log_level(syz::LogLevel::Debug);
+    cfg.log_to_stderr();
+    let _guard = cfg.initialize()?;
 
     let ctx = synthizer::Context::new()?;
     let stream_def = synthizer::CustomStreamDef::from_seek(FileStream(file))?;
