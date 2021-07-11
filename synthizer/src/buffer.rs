@@ -1,3 +1,4 @@
+use std::os::raw::c_ulonglong;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -23,6 +24,18 @@ impl Buffer {
         let mut h = Default::default();
         check_error(unsafe {
             syz_createBufferFromFile(&mut h as *mut syz_Handle, c_str.as_ptr())
+        })?;
+        Ok(Buffer(Handle::new(h)))
+    }
+
+    pub fn from_encoded_data(data: &&[u8]) -> Result<Buffer> {
+        let mut h = Default::default();
+        check_error(unsafe {
+            syz_createBufferFromEncodedData(
+                &mut h as *mut syz_Handle,
+                data.len() as c_ulonglong,
+                &data[0] as *const u8 as *const i8,
+            )
         })?;
         Ok(Buffer(Handle::new(h)))
     }
