@@ -5,18 +5,9 @@ use std::sync::{Arc, RwLock};
 
 use crate::internal_prelude::*;
 
-mod valid_userdata {
-    use super::*;
-
-    pub trait ValidUserdata: Send + Sync + Any {}
-}
-use valid_userdata::*;
-
-impl<T: Send + Sync + Any> ValidUserdata for T {}
-
 /// The userdata in Synthizer never changes, but the values here can.
 pub(crate) struct UserdataBox {
-    userdata: RwLock<Option<Arc<dyn ValidUserdata>>>,
+    userdata: RwLock<Option<Arc<dyn Any + Send + Sync>>>,
     /// For streaming/buffer stuff.
     streaming_userdata: Option<(std::ptr::NonNull<c_void>, unsafe fn(*mut c_void))>,
 }
@@ -43,12 +34,12 @@ impl UserdataBox {
         }
     }
 
-    pub(crate) fn set_userdata(&self, ud: Option<impl ValidUserdata>) {
+    pub(crate) fn set_userdata(&self, ud: Option<impl Any + Send + Sync>) {
         let mut guard = self.userdata.write().expect("Mutex poisoned");
-        *guard = ud.map(|x| Arc::new(x) as Arc<dyn ValidUserdata>);
+        *guard = ud.map(|x| Arc::new(x) as Arc<dyn Any + Send + Sync>);
     }
 
-    pub(crate) fn get_userdata(&self) -> Option<Arc<dyn ValidUserdata>> {
+    pub(crate) fn get_userdata(&self) -> Option<Arc<dyn Any + Send + Sync>> {
         (*self.userdata.read().expect("Mutex poisoned")).clone()
     }
 

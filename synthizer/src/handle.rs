@@ -32,6 +32,35 @@ impl Handle {
         T::cast_from(self.handle_ref())
     }
 
+    /// Get this handle's userdata.
+    pub fn get_userdata(&self) -> Result<Option<Arc<dyn Any + Send + Sync>>> {
+        with_witness(|| {
+            let b = self.get_userdata_box()?;
+            Ok(unsafe { b.as_mut().expect("Is always non-NULL").get_userdata() }.clone())
+        })
+    }
+
+    /// Set the userdata for this handle.
+    pub fn set_userdata(&self, userdata: Option<impl Any + Send + Sync>) -> Result<()> {
+        with_witness(move || {
+            let b = self.get_userdata_box()?;
+            unsafe {
+                b.as_mut()
+                    .expect("Pointer is always valid")
+                    .set_userdata(userdata)
+            };
+            Ok(())
+        })
+    }
+
+    /// Needs to be called inside of [with_witness].
+    fn get_userdata_box(&self) -> Result<*mut UserdataBox> {
+        let mut ud: *mut std::ffi::c_void = std::ptr::null_mut();
+        check_error(unsafe { syz_getUserdata(&mut ud as *mut *mut std::ffi::c_void, self.0) })?;
+        let ud_box = ud as *mut UserdataBox;
+        Ok(ud_box)
+    }
+
     #[allow(clippy::wrong_self_convention)]
     pub(crate) fn from_handle_internal(h: Handle) -> Handle {
         h

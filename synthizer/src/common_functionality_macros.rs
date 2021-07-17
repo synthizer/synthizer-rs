@@ -23,6 +23,14 @@ macro_rules! object_common {
             T::cast_from(self.handle_ref())
         }
 
+        pub fn get_userdata(&self) -> Result<Option<Arc<dyn Any + Send + Sync>>> {
+            self.0.get_userdata()
+        }
+
+        pub fn set_userdata(&self, userdata: Option<impl Any + Send + Sync>) -> Result<()> {
+            self.0.set_userdata(userdata)
+        }
+
         /// Internal function to get objects from handles, used in
         /// casting.rs to enable casting from impls behind a macro.  This
         /// can't be pub: converting a handle of the worng type to a

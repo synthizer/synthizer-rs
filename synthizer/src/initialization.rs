@@ -108,7 +108,7 @@ impl Default for LibraryConfig {
 /// already handle this check, but things like userdata also need to ensure that
 /// return values from Synthizer calls remain valid until they are converted
 /// into Rust values again.
-pub(crate) fn with_witness<T>(closure: impl Fn() -> Result<T>) -> Result<T> {
+pub(crate) fn with_witness<T>(closure: impl FnOnce() -> Result<T>) -> Result<T> {
     let guard = WITNESS_LOCK.read().expect("Mutex Poisoned");
     if !*guard {
         return Err(Error::rust_error("Synthizer is not initialized"));
