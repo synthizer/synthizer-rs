@@ -45,7 +45,7 @@ impl Handle {
 impl Drop for Handle {
     fn drop(&mut self) {
         check_error(unsafe { syz_handleDecRef(self.0) })
-        .expect("Dropping handles should not error");
+            .expect("Dropping handles should not error");
     }
 }
 

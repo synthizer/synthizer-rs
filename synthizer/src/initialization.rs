@@ -1,8 +1,16 @@
 use std::path::Path;
+use std::sync::RwLock;
 
 use synthizer_sys::*;
 
 use crate::errors::*;
+
+// Lock to let parts of the Rust bindings enforce that Synthizer can't
+// deinitialize.  The contained bool records whether initialization has happened
+// yet or not.
+lazy_static::lazy_static! {
+    static ref WITNESS_LOCK: RwLock<bool> = RwLock::new(false);
+}
 
 /// An `InitializationGuard` shuts Synthizer down when dropped, and must be kept
 /// alive for the duration of your program.
@@ -16,6 +24,8 @@ impl InitializationGuard {
 
 impl Drop for InitializationGuard {
     fn drop(&mut self) {
+        let mut guard = WITNESS_LOCK.write().expect("Mutex Poisoned");
+        *guard = false;
         unsafe { syz_shutdown() };
     }
 }
@@ -23,7 +33,9 @@ impl Drop for InitializationGuard {
 /// Initialize Synthizer, returning a `InitializationGuard` which must be kept
 /// alive for the duration of your program.
 pub fn initialize() -> Result<InitializationGuard> {
+    let mut guard = WITNESS_LOCK.write().expect("Mutex poisoned");
     check_error(unsafe { syz_initialize() })?;
+    *guard = true;
     Ok(InitializationGuard::new_init())
 }
 
@@ -78,7 +90,9 @@ impl LibraryConfig {
 
     /// Initialize Synthizer.
     pub fn initialize(self) -> Result<InitializationGuard> {
+        let mut guard = WITNESS_LOCK.write().expect("Mutex poisoned");
         check_error(unsafe { syz_initializeWithConfig(&self.config as *const syz_LibraryConfig) })?;
+        *guard = true;
         Ok(InitializationGuard::new_init())
     }
 }
@@ -87,4 +101,21 @@ impl Default for LibraryConfig {
     fn default() -> LibraryConfig {
         LibraryConfig::new()
     }
+}
+
+/// Call a provided closure with the "witness lock", which ensures that
+/// Synthizer was initialized at the start of the call and remains initialized
+/// for the entire sequence of operations.  This holds the read-side of an
+/// RwLock which is written to by library initialization.  It won't call the
+/// closure unless the library is known to be initialized.  Most Synthizer calls
+/// already handle this check, but things like userdata also need to ensure that
+/// return values from Synthizer calls remain valid until they are converted
+/// into Rust values again.
+pub(crate) fn with_witness<T>(closure: impl Fn() -> Result<T>) -> Result<T> {
+    let guard = WITNESS_LOCK.read().expect("Mutex Poisoned");
+    if !*guard {
+        return Err(Error::rust_error("Synthizer is not initialized"));
+    }
+
+    closure()
 }
