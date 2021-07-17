@@ -101,7 +101,7 @@ extern "C" fn destroy_cb<T>(userdata: *mut c_void) {
 }
 
 /// Used as part of [StreamHandle] consumption.
-extern "C" fn drop_cb<T>(ptr: *mut c_void) {
+fn drop_cb<T>(ptr: *mut c_void) {
     unsafe {
         Box::<T>::from_raw(ptr as *mut T);
     }
@@ -187,7 +187,7 @@ impl Drop for CustomStreamDef {
 pub struct StreamHandle {
     handle: syz_Handle,
     // If set, this stream will move the given value into Synthizer userdata for freeing later.
-    needs_drop: Option<(std::ptr::NonNull<c_void>, extern "C" fn(*mut c_void))>,
+    needs_drop: Option<(std::ptr::NonNull<c_void>, fn(*mut c_void))>,
     used: bool,
 }
 
@@ -271,15 +271,17 @@ impl StreamHandle {
         self.handle
     }
 
-    pub(crate) fn get_userdata(&self) -> (*mut c_void, Option<unsafe extern "C" fn(*mut c_void)>) {
-        if let Some((ud, free_cb)) = self.needs_drop {
-            (ud.as_ptr(), Some(free_cb))
+    pub(crate) fn get_userdata(mut self) -> UserdataBox {
+        let ret = if let Some((ud, free_cb)) = self.needs_drop.take() {
+            UserdataBox::from_streaming_userdata(ud, free_cb)
         } else {
-            (std::ptr::null_mut(), None)
-        }
+            UserdataBox::new()
+        };
+        self.consume();
+        ret
     }
 
-    pub(crate) fn consume(mut self) {
+    fn consume(mut self) {
         self.used = true;
     }
 }

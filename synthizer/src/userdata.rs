@@ -34,13 +34,12 @@ impl UserdataBox {
     }
 
     pub(crate) fn from_streaming_userdata(
-        ptr: *mut c_void,
+        ptr: std::ptr::NonNull<c_void>,
         free_cb: fn(*mut c_void),
     ) -> UserdataBox {
-        assert!(ptr != std::ptr::null_mut());
         UserdataBox {
             userdata: RwLock::new(None),
-            streaming_userdata: Some((unsafe { std::ptr::NonNull::new_unchecked(ptr) }, free_cb)),
+            streaming_userdata: Some((ptr, free_cb)),
         }
     }
 
@@ -56,9 +55,9 @@ impl UserdataBox {
     /// Consume this `UserdataBox`.  if the provided closure succeeds, the
     /// closure has taken ownership of the values. Otherwise, the object is
     /// safely dropped.
-    fn consume<T>(
+    pub(crate) fn consume<T>(
         self,
-        closure: impl (Fn(*mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
+        mut closure: impl (FnMut(*mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
     ) -> Result<T> {
         let leaked = Box::into_raw(Box::new(self)) as *mut c_void;
         let res = closure(leaked, drop_userdata_cb);
@@ -88,7 +87,7 @@ impl Drop for UserdataBox {
 
 /// Helper function to make a userdata pair for the constructor.
 pub(crate) fn wrap_constructor<T>(
-    closure: impl (Fn(*mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
+    closure: impl (FnMut(*mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
 ) -> Result<T> {
     UserdataBox::new().consume(closure)
 }

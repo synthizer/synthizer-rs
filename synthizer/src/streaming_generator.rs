@@ -34,20 +34,22 @@ impl StreamingGenerator {
         context: &Context,
         handle: StreamHandle,
     ) -> Result<StreamingGenerator> {
-        let mut h = handle.get_handle();
-        let (ud, ud_free) = handle.get_userdata();
-        check_error(unsafe {
-            syz_createStreamingGeneratorFromStreamHandle(
-                &mut h as *mut syz_Handle,
-                context.to_syz_handle(),
-                handle.get_handle(),
-                ud,
-                ud_free,
-            )
-        })?;
-        handle.consume();
-        let ret = StreamingGenerator(Handle::new(h));
-        Ok(ret)
+        let sh = handle.get_handle();
+        let ud_box = handle.get_userdata();
+        ud_box.consume(move |ud, cb| {
+            let mut out = 0;
+            check_error(unsafe {
+                syz_createStreamingGeneratorFromStreamHandle(
+                    &mut out as *mut syz_Handle,
+                    context.to_syz_handle(),
+                    sh,
+                    ud,
+                    Some(cb),
+                )
+            })?;
+            let ret = StreamingGenerator(Handle::new(out));
+            Ok(ret)
+        })
     }
 
     pub fn from_stream_params(
