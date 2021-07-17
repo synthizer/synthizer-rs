@@ -1,4 +1,5 @@
-//! Demonstrates custom streams by implementing one that wraps a file.
+//! Demonstrates custom streams by implementing one that wraps a file, then
+//! registering it as a custom protocol.
 use std::fs::File;
 
 use anyhow::Result;
@@ -28,6 +29,16 @@ impl std::io::Seek for FileStream {
     }
 }
 
+fn protocol_handler(
+    _protocol: &str,
+    path: &str,
+    _param: usize,
+) -> anyhow::Result<syz::CustomStreamDef> {
+    let file = std::fs::File::open(path)?;
+    let stream_def = syz::CustomStreamDef::from_seekable(FileStream(file))?;
+    Ok(stream_def)
+}
+
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
 
@@ -36,17 +47,17 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let file = std::fs::File::open(args[1].as_str())?;
-
     let mut cfg = syz::LibraryConfig::default();
     cfg.log_level(syz::LogLevel::Debug);
     cfg.log_to_stderr();
     let _guard = cfg.initialize()?;
 
-    let ctx = synthizer::Context::new()?;
-    let stream_def = synthizer::CustomStreamDef::from_seekable(FileStream(file))?;
-    let stream = synthizer::StreamHandle::from_stream_def(stream_def)?;
-    let gen = syz::StreamingGenerator::from_stream_handle(&ctx, stream)?;
+    let ctx = syz::Context::new()?;
+
+    syz::register_stream_protocol("custom_protocol", protocol_handler)?;
+
+    let gen =
+        syz::StreamingGenerator::from_stream_params(&ctx, "custom_protocol", args[1].as_str(), 0)?;
     let src = syz::DirectSource::new(&ctx)?;
     src.add_generator(&gen)?;
 

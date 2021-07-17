@@ -306,7 +306,7 @@ impl Drop for StreamHandle {
 static mut STREAM_ERR_CONSTANT: *const c_char = std::ptr::null();
 
 extern "C" fn stream_open_callback<
-    E: std::error::Error,
+    E,
     T: 'static + Send + Sync + Fn(&str, &str, usize) -> std::result::Result<CustomStreamDef, E>,
 >(
     out: *mut syz_CustomStreamDef,
@@ -334,8 +334,9 @@ extern "C" fn stream_open_callback<
     Box::into_raw(cb);
 
     match res {
-        Ok(s) => {
+        Ok(mut s) => {
             unsafe { *out = s.def };
+            s.used = true;
             0
         }
         Err(_) => {
@@ -346,7 +347,7 @@ extern "C" fn stream_open_callback<
 }
 
 pub fn register_stream_protocol<
-    E: std::error::Error,
+    E,
     T: 'static + Send + Sync + Fn(&str, &str, usize) -> std::result::Result<CustomStreamDef, E>,
 >(
     protocol: &str,
