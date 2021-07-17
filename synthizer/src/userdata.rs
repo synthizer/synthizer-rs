@@ -3,7 +3,7 @@ use std::any::Any;
 use std::ffi::c_void;
 use std::sync::{Arc, RwLock};
 
-use crate::errors::*;
+use crate::internal_prelude::*;
 
 mod valid_userdata {
     use super::*;

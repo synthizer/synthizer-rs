@@ -1,12 +1,7 @@
 use std::os::raw::c_char;
 use std::path::Path;
 
-use synthizer_sys::*;
-
-use crate::casting::*;
-use crate::errors::*;
-use crate::handle::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 #[derive(Clone)]
 pub struct StreamingGenerator(pub(crate) Handle);

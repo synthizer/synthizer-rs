@@ -1,11 +1,4 @@
-use synthizer_sys::*;
-
-use crate::casting::*;
-use crate::context::*;
-use crate::errors::*;
-use crate::generator::*;
-use crate::handle::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 #[derive(Clone)]
 pub struct PannedSource(pub(crate) Handle);

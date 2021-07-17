@@ -1,7 +1,4 @@
-use synthizer_sys::*;
-
-use crate::handle::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 /// A Synthizer route, used to connect sources to effects.  See
 /// [Context::config_route] or, if you want to avoid this type,

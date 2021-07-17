@@ -1,12 +1,5 @@
 //! The `Context`.
-use synthizer_sys::*;
-
-use crate::casting::*;
-use crate::errors::*;
-use crate::events;
-use crate::handle::*;
-use crate::routes::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 /// The `Context` represents an audio device.
 #[derive(Clone)]

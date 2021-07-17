@@ -1,9 +1,6 @@
+use crate::internal_prelude::*;
 use std::path::Path;
 use std::sync::RwLock;
-
-use synthizer_sys::*;
-
-use crate::errors::*;
 
 // Lock to let parts of the Rust bindings enforce that Synthizer can't
 // deinitialize.  The contained bool records whether initialization has happened

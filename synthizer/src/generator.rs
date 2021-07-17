@@ -1,8 +1,4 @@
-use synthizer_sys::*;
-
-use crate::casting::*;
-use crate::handle::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 /// Represents the generator "base class".  A [From] impl lets you get to this
 /// object from any kind of generator.

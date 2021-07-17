@@ -1,9 +1,4 @@
-use synthizer_sys::*;
-
-use crate::casting::*;
-use crate::generator::*;
-use crate::handle::*;
-use crate::*;
+use crate::internal_prelude::*;
 
 /// Represents the source "base class".  It is possible to convert to this type
 /// from any source, in order to use source-common functionality.

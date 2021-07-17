@@ -1,15 +1,12 @@
 //! Implement the infrastructure for custom streams.
 //!
 //! We actually get to do this on top of `Read` and `Seek` directly.
+use crate::internal_prelude::*;
 use std::borrow::Borrow;
 use std::ffi::{c_void, CString};
 use std::io::{Read, Seek};
 use std::os::raw::{c_char, c_int, c_longlong, c_ulonglong};
 use std::slice::from_raw_parts_mut;
-
-use synthizer_sys::*;
-
-use crate::errors::*;
 
 /// A trait which custom streams must implement in order to support closing.
 ///

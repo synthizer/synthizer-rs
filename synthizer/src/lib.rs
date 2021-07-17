@@ -19,6 +19,7 @@ mod generator;
 mod global_echo;
 mod global_fdn_reverb;
 mod initialization;
+mod internal_prelude;
 mod noise_generator;
 mod panned_source;
 mod routes;

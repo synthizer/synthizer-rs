@@ -1,6 +1,4 @@
-use synthizer_sys::*;
-
-use crate::errors::*;
+use crate::internal_prelude::*;
 
 /// Suggested default Q for filter design functions.  If you don't have a better
 /// idea what value of Q to use, this is what you want.
