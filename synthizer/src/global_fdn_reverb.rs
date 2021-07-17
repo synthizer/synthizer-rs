@@ -5,16 +5,18 @@ pub struct GlobalFdnReverb(pub(crate) Handle);
 
 impl GlobalFdnReverb {
     pub fn new(context: &Context) -> Result<GlobalFdnReverb> {
-        let mut h = Default::default();
-        check_error(unsafe {
-            syz_createGlobalFdnReverb(
-                &mut h as *mut syz_Handle,
-                context.to_syz_handle(),
-                std::ptr::null_mut(),
-                None,
-            )
-        })?;
-        Ok(GlobalFdnReverb(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createGlobalFdnReverb(
+                    &mut h as *mut syz_Handle,
+                    context.to_syz_handle(),
+                    ud,
+                    Some(cb),
+                )
+            })?;
+            Ok(GlobalFdnReverb(Handle::new(h)))
+        })
     }
 
     effect_properties!();

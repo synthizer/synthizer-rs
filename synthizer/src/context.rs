@@ -7,11 +7,11 @@ pub struct Context(pub(crate) Handle);
 
 impl Context {
     pub fn new() -> Result<Context> {
-        let mut h = 0;
-        check_error(unsafe {
-            syz_createContext(&mut h as *mut syz_Handle, std::ptr::null_mut(), None)
-        })?;
-        Ok(Context(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = 0;
+            check_error(unsafe { syz_createContext(&mut h as *mut syz_Handle, ud, Some(cb)) })?;
+            Ok(Context(Handle::new(h)))
+        })
     }
 
     pub fn enable_events(&self) -> Result<()> {

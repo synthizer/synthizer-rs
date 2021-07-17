@@ -5,16 +5,18 @@ pub struct Source3D(pub(crate) Handle);
 
 impl Source3D {
     pub fn new(context: &Context) -> Result<Source3D> {
-        let mut h = Default::default();
-        check_error(unsafe {
-            syz_createSource3D(
-                &mut h as *mut syz_Handle,
-                context.to_syz_handle(),
-                std::ptr::null_mut(),
-                None,
-            )
-        })?;
-        Ok(Source3D(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createSource3D(
+                    &mut h as *mut syz_Handle,
+                    context.to_syz_handle(),
+                    ud,
+                    Some(cb),
+                )
+            })?;
+            Ok(Source3D(Handle::new(h)))
+        })
     }
 
     source_properties!();

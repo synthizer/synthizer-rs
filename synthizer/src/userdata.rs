@@ -85,3 +85,10 @@ impl Drop for UserdataBox {
         }
     }
 }
+
+/// Helper function to make a userdata pair for the constructor.
+pub(crate) fn wrap_constructor<T>(
+    closure: impl (Fn(*mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
+) -> Result<T> {
+    UserdataBox::new().consume(closure)
+}

@@ -10,11 +10,13 @@ pub type EchoTapConfig = syz_EchoTapConfig;
 
 impl GlobalEcho {
     pub fn new(context: &Context) -> Result<GlobalEcho> {
-        let mut h = Default::default();
-        check_error(unsafe {
-            syz_createGlobalEcho(&mut h, context.to_syz_handle(), std::ptr::null_mut(), None)
-        })?;
-        Ok(GlobalEcho(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createGlobalEcho(&mut h, context.to_syz_handle(), ud, Some(cb))
+            })?;
+            Ok(GlobalEcho(Handle::new(h)))
+        })
     }
 
     /// An empty slice clears the taps. Alternatively, you can use `clear_taps`.

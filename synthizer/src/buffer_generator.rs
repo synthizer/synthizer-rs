@@ -5,16 +5,13 @@ pub struct BufferGenerator(pub(crate) Handle);
 
 impl BufferGenerator {
     pub fn new(context: &Context) -> Result<BufferGenerator> {
-        let mut h = 0;
-        check_error(unsafe {
-            syz_createBufferGenerator(
-                &mut h as *mut u64,
-                context.to_syz_handle(),
-                std::ptr::null_mut(),
-                None,
-            )
-        })?;
-        Ok(BufferGenerator(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = 0;
+            check_error(unsafe {
+                syz_createBufferGenerator(&mut h as *mut u64, context.to_syz_handle(), ud, Some(cb))
+            })?;
+            Ok(BufferGenerator(Handle::new(h)))
+        })
     }
 
     generator_properties!();

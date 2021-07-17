@@ -5,16 +5,18 @@ pub struct DirectSource(pub(crate) Handle);
 
 impl DirectSource {
     pub fn new(context: &Context) -> Result<DirectSource> {
-        let mut h = Default::default();
-        check_error(unsafe {
-            syz_createDirectSource(
-                &mut h as *mut syz_Handle,
-                context.to_syz_handle(),
-                std::ptr::null_mut(),
-                None,
-            )
-        })?;
-        Ok(DirectSource(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createDirectSource(
+                    &mut h as *mut syz_Handle,
+                    context.to_syz_handle(),
+                    ud,
+                    Some(cb),
+                )
+            })?;
+            Ok(DirectSource(Handle::new(h)))
+        })
     }
 
     source_properties!();

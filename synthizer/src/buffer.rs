@@ -14,16 +14,13 @@ impl Buffer {
         let c_str = std::ffi::CString::new(u_str)
             .map_err(|_| Error::rust_error("Path contains a NULL byte"))?;
 
-        let mut h = Default::default();
-        check_error(unsafe {
-            syz_createBufferFromFile(
-                &mut h as *mut syz_Handle,
-                c_str.as_ptr(),
-                std::ptr::null_mut(),
-                None,
-            )
-        })?;
-        Ok(Buffer(Handle::new(h)))
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createBufferFromFile(&mut h as *mut syz_Handle, c_str.as_ptr(), ud, Some(cb))
+            })?;
+            Ok(Buffer(Handle::new(h)))
+        })
     }
 
     pub fn from_encoded_data(data: &&[u8]) -> Result<Buffer> {
