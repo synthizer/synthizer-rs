@@ -188,7 +188,6 @@ pub struct StreamHandle {
     handle: syz_Handle,
     // If set, this stream will move the given value into Synthizer userdata for freeing later.
     needs_drop: Option<(std::ptr::NonNull<c_void>, fn(*mut c_void))>,
-    used: bool,
 }
 
 impl StreamHandle {
@@ -207,7 +206,6 @@ impl StreamHandle {
         Ok(StreamHandle {
             handle: h,
             needs_drop: None,
-            used: false,
         })
     }
 
@@ -236,7 +234,6 @@ impl StreamHandle {
                 },
                 drop_cb::<Vec<u8>>,
             )),
-            used: false,
         })
     }
 
@@ -263,7 +260,6 @@ impl StreamHandle {
         Ok(StreamHandle {
             handle: h,
             needs_drop: None,
-            used: false,
         })
     }
 
@@ -271,27 +267,35 @@ impl StreamHandle {
         self.handle
     }
 
-    pub(crate) fn get_userdata(mut self) -> UserdataBox {
+    fn get_userdata(mut self) -> UserdataBox {
+        // Be sure to take here so that Drop doesn't try to double free.
         let ret = if let Some((ud, free_cb)) = self.needs_drop.take() {
             UserdataBox::from_streaming_userdata(ud, free_cb)
         } else {
             UserdataBox::new()
         };
-        self.consume();
         ret
     }
 
-    fn consume(mut self) {
-        self.used = true;
+    /// Wrap getting userdata and also make sure to free the handle once the
+    /// closure ends, regardless of if it succeeded.
+    ///
+    // The closure gets the stream handle, as well as the userdata pointer and
+    // free callback.
+    pub(crate) fn with_userdata<T>(
+        mut self,
+        mut closure: impl (FnMut(syz_Handle, *mut c_void, extern "C" fn(*mut c_void)) -> Result<T>),
+    ) -> Result<T> {
+        let sh = self.handle;
+        // Take the handle.
+        self.handle = 0;
+        let ud = self.get_userdata();
+        ud.consume(move |ud, cb| closure(sh, ud, cb))
     }
 }
 
 impl Drop for StreamHandle {
     fn drop(&mut self) {
-        if self.used {
-            return;
-        }
-
         unsafe { syz_handleDecRef(self.handle) };
         if let Some((ud, cb)) = self.needs_drop {
             cb(ud.as_ptr());

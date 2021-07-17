@@ -34,9 +34,7 @@ impl StreamingGenerator {
         context: &Context,
         handle: StreamHandle,
     ) -> Result<StreamingGenerator> {
-        let sh = handle.get_handle();
-        let ud_box = handle.get_userdata();
-        ud_box.consume(move |ud, cb| {
+        handle.with_userdata(move |sh, ud, cb| {
             let mut out = 0;
             check_error(unsafe {
                 syz_createStreamingGeneratorFromStreamHandle(
