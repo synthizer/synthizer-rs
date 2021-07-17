@@ -25,6 +25,8 @@ mod routes;
 mod source;
 mod source_3d;
 mod streaming_generator;
+mod userdata;
+
 
 pub use biquad::*;
 pub use buffer::*;
