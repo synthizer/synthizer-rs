@@ -1,6 +1,5 @@
 use std::os::raw::c_char;
 use std::path::Path;
-use std::sync::Arc;
 
 use synthizer_sys::*;
 

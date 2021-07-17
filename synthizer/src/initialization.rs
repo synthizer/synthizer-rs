@@ -10,7 +10,6 @@ pub struct InitializationGuard();
 
 impl InitializationGuard {
     fn new_init() -> InitializationGuard {
-        crate::userdata::init_userdata_map();
         InitializationGuard()
     }
 }
@@ -18,7 +17,6 @@ impl InitializationGuard {
 impl Drop for InitializationGuard {
     fn drop(&mut self) {
         unsafe { syz_shutdown() };
-        crate::userdata::clear_userdata_map();
     }
 }
 
