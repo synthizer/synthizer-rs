@@ -2,6 +2,7 @@
 
 ![CI Status](https://github.com/synthizer/synthizer-rs/actions/workflows/ci.yaml/badge.svg)
 [GitHub Sponsors](https://github.com/sponsors/ahicks92)
+Current Synthizer version: 0.10.0
 
 This crate contains low-level Synthizer bindings generated with bindgen, plus a
 vendored copy of Synthizer.  Currently, it is impossible to use dynamically

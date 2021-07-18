@@ -3,6 +3,8 @@
 ![CI Status](https://github.com/synthizer/synthizer-rs/actions/workflows/ci.yaml/badge.svg)
 [GitHub Sponsors](https://github.com/sponsors/ahicks92)
 
+Current targeted Synthizer version: 0.10.0
+
 Official, high-level bindings to
 [Synthizer](https://github.com/synthizer/synthizer), a library for 3D audio and
 effects.
