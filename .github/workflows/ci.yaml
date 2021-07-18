@@ -21,7 +21,6 @@ jobs:
           - os: ubuntu-18.04
           - os: macos-latest
 
-
   test_windows:
     runs-on: windows-2019
     steps:
