@@ -56,7 +56,9 @@ impl Handle {
     /// Needs to be called inside of [with_witness].
     fn get_userdata_box(&self) -> Result<*mut UserdataBox> {
         let mut ud: *mut std::ffi::c_void = std::ptr::null_mut();
-        check_error(unsafe { syz_getUserdata(&mut ud as *mut *mut std::ffi::c_void, self.0) })?;
+        check_error(unsafe {
+            syz_handleGetUserdata(&mut ud as *mut *mut std::ffi::c_void, self.0)
+        })?;
         let ud_box = ud as *mut UserdataBox;
         Ok(ud_box)
     }

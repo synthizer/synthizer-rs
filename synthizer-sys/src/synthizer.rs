@@ -203,7 +203,7 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 extern "C" {
-    pub fn syz_getUserdata(
+    pub fn syz_handleGetUserdata(
         out: *mut *mut ::std::os::raw::c_void,
         handle: syz_Handle,
     ) -> syz_ErrorCode;
@@ -211,7 +211,7 @@ extern "C" {
 pub type syz_UserdataFreeCallback =
     ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void)>;
 extern "C" {
-    pub fn syz_setUserdata(
+    pub fn syz_handleSetUserdata(
         handle: syz_Handle,
         userdata: *mut ::std::os::raw::c_void,
         free_callback: syz_UserdataFreeCallback,
@@ -459,33 +459,6 @@ extern "C" {
         flags: ::std::os::raw::c_ulonglong,
     ) -> syz_ErrorCode;
 }
-extern "C" {
-    pub fn syz_createStreamHandleFromStreamParams(
-        out: *mut syz_Handle,
-        protocol: *const ::std::os::raw::c_char,
-        path: *const ::std::os::raw::c_char,
-        param: *mut ::std::os::raw::c_void,
-        userdata: *mut ::std::os::raw::c_void,
-        userdata_free_callback: syz_UserdataFreeCallback,
-    ) -> syz_ErrorCode;
-}
-extern "C" {
-    pub fn syz_createStreamHandleFromMemory(
-        out: *mut syz_Handle,
-        data_len: ::std::os::raw::c_ulonglong,
-        data: *const ::std::os::raw::c_char,
-        userdata: *mut ::std::os::raw::c_void,
-        userdata_free_callback: syz_UserdataFreeCallback,
-    ) -> syz_ErrorCode;
-}
-extern "C" {
-    pub fn syz_createStreamHandleFromFile(
-        out: *mut syz_Handle,
-        path: *const ::std::os::raw::c_char,
-        userdata: *mut ::std::os::raw::c_void,
-        userdata_free_callback: syz_UserdataFreeCallback,
-    ) -> syz_ErrorCode;
-}
 pub type syz_StreamReadCallback = ::std::option::Option<
     unsafe extern "C" fn(
         read: *mut ::std::os::raw::c_ulonglong,
@@ -598,14 +571,6 @@ impl Default for syz_CustomStreamDef {
         unsafe { ::std::mem::zeroed() }
     }
 }
-extern "C" {
-    pub fn syz_createStreamHandleFromCustomStream(
-        out: *mut syz_Handle,
-        callbacks: *mut syz_CustomStreamDef,
-        userdata: *mut ::std::os::raw::c_void,
-        userdata_free_callback: syz_UserdataFreeCallback,
-    ) -> syz_ErrorCode;
-}
 pub type syz_StreamOpenCallback = ::std::option::Option<
     unsafe extern "C" fn(
         callbacks: *mut syz_CustomStreamDef,
@@ -621,6 +586,41 @@ extern "C" {
         protocol: *const ::std::os::raw::c_char,
         callback: syz_StreamOpenCallback,
         userdata: *mut ::std::os::raw::c_void,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createStreamHandleFromStreamParams(
+        out: *mut syz_Handle,
+        protocol: *const ::std::os::raw::c_char,
+        path: *const ::std::os::raw::c_char,
+        param: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createStreamHandleFromMemory(
+        out: *mut syz_Handle,
+        data_len: ::std::os::raw::c_ulonglong,
+        data: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createStreamHandleFromFile(
+        out: *mut syz_Handle,
+        path: *const ::std::os::raw::c_char,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createStreamHandleFromCustomStream(
+        out: *mut syz_Handle,
+        callbacks: *mut syz_CustomStreamDef,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
 }
 extern "C" {
