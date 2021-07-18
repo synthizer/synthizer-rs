@@ -3,8 +3,11 @@ name = "synthizer-sys"
 version = "0.1.0"
 authors = ["Austin Hicks <ahicks@ahicks.io>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description="Low-level bindings to Synthizer, a library for 3D audio and effects"
+readme="README.md"
+repository="https://github.com/synthizer/synthizer-rs"
+license="Unlicense"
+keywords=["audio", "gamedev"]
 
 [build-dependencies]
 cmake = "0.1.45"
