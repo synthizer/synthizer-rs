@@ -11,6 +11,10 @@ fn main() {
         //
         // Synthizer isn't able to deal with this at all, so force release.
         cfg.profile("Release");
+        // We need to use Ninja in CI.
+        if std::env::var("CI").is_ok() {
+            cfg.generator("Ninja");
+        }
     }
 
     let dst = cfg.build();
