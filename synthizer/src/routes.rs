@@ -9,7 +9,8 @@ use crate::internal_prelude::*;
 #[derive(Clone)]
 pub struct RouteConfig(pub(crate) syz_RouteConfig);
 
-/// A builder for an effect route.  `new` and `Default` are the equivalent of `syz_initRouteConfig`, e.g. a builder representing the default route.
+/// A builder for an effect route.  `new` and `Default` are the equivalent of
+/// `syz_initRouteConfig`, e.g. a builder representing the default route.
 #[derive(Clone)]
 pub struct RouteConfigBuilder(syz_RouteConfig);
 

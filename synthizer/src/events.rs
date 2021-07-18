@@ -39,7 +39,8 @@ impl<'a> EventIterator<'a> {
             return Ok(None);
         }
 
-        // be careful here: we must make sure to deinitialize the event before returning.
+        // be careful here: we must make sure to deinitialize the event before
+        // returning.
         let inc_ret = check_error(unsafe { syz_handleIncRef(evt.source) })
             .and_then(|_| {
                 source = Some(Handle::new(evt.source));

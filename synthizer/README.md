@@ -1,5 +1,8 @@
 # Synthizer
 
+![CI Status](https://github.com/github/synthizer/synthizer-rs/workflows/main.yml/badge.svg)
+[GitHub Sponsors](https://github.com/sponsors/ahicks92)
+
 Official, high-level bindings to
 [Synthizer](https://github.com/synthizer/synthizer), a library for 3D audio and
 effects.
@@ -37,3 +40,10 @@ fn main() -> syz::Result<()> {
 
 With the additional complexity being justified by things such as multiple
 generators per source, being able to reuse buffers, etc.
+
+
+## Building
+
+This should build out of the box on most platforms, but Windows may have
+difficulties.  If you can't build on Windows, try building under an MSVC shell,
+and if that doesn't work open an issue.

@@ -10,7 +10,8 @@ use std::slice::from_raw_parts_mut;
 
 /// A trait which custom streams must implement in order to support closing.
 ///
-/// Rust's stdlib has no concept of closing in it, but simply dropping values leads to panics.  This trait is therefore required to implement closing.
+/// Rust's stdlib has no concept of closing in it, but simply dropping values
+/// leads to panics.  This trait is therefore required to implement closing.
 pub trait CloseStream {
     fn close(&mut self) -> std::result::Result<(), Box<dyn std::fmt::Display>>;
 }
@@ -133,6 +134,9 @@ fn fillout_userdata<T>(dest: &mut syz_CustomStreamDef, val: T) {
     })) as *mut c_void;
 }
 
+/// A definition for a custom stream.  This can come from a variety of places
+/// and is consumed by e.g. [StreamingGenerator::from_stream_handle], or
+/// returned as a result of the callback passed to [register_stream_protocol].
 pub struct CustomStreamDef {
     def: syz_CustomStreamDef,
     /// Has this handle been used yet? If not, the drop impl needs to do cleanup
@@ -183,7 +187,8 @@ impl Drop for CustomStreamDef {
     }
 }
 
-/// A `StreamHandle` binds Synthizer custom streams, as well as other kinds of streaming functionality.
+/// A `StreamHandle` binds Synthizer custom streams, as well as other kinds of
+/// streaming functionality.
 pub struct StreamHandle {
     handle: syz_Handle,
     // If set, this stream will move the given value into Synthizer userdata for freeing later.
@@ -279,7 +284,6 @@ impl StreamHandle {
 
     /// Wrap getting userdata and also make sure to free the handle once the
     /// closure ends, regardless of if it succeeded.
-    ///
     // The closure gets the stream handle, as well as the userdata pointer and
     // free callback.
     pub(crate) fn with_userdata<T>(
@@ -346,6 +350,11 @@ extern "C" fn stream_open_callback<
     }
 }
 
+/// register a custom protocol.
+///
+/// The callback here must return a [CustomStreamDef] which represents the
+/// custom stream.  Synthizer is also not safely reentrant, and the callback
+/// must not call back into Synthizer.
 pub fn register_stream_protocol<
     E,
     T: 'static + Send + Sync + Fn(&str, &str, usize) -> std::result::Result<CustomStreamDef, E>,

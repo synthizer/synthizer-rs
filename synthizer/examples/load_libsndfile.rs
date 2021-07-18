@@ -1,4 +1,5 @@
-//! Demonstrates loading Libsndfile.  This example takes two arguments; the first is a path to Libsndfile, and the second a path to a file to decode.
+//! Demonstrates loading Libsndfile.  This example takes two arguments; the
+//! first is a path to Libsndfile, and the second a path to a file to decode.
 use synthizer as syz;
 
 fn main() -> syz::Result<()> {

@@ -1,4 +1,6 @@
-//! Implement casting (upcasting and downcasting) for Synthizer objects. Allows converting any object to a handle, and upcasting/downcasting along the inheritance hierarchy.
+//! Implement casting (upcasting and downcasting) for Synthizer objects. Allows
+//! converting any object to a handle, and upcasting/downcasting along the
+//! inheritance hierarchy.
 use crate::handle::*;
 use crate::*;
 
@@ -54,7 +56,8 @@ impl CastTarget for Handle {
 
 pub(crate) use cast_target::*;
 
-/// Macro to allow trying to cast to a given type from a list of type constants it supports.
+/// Macro to allow trying to cast to a given type from a list of type constants
+/// it supports.
 macro_rules! cast {
     ($t: ty, $($otypes: expr),+) => {
         impl CastTarget for $t {

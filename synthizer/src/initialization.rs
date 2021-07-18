@@ -72,7 +72,8 @@ impl LibraryConfig {
         self.config.logging_backend = SYZ_LOGGING_BACKEND_STDERR;
     }
 
-    /// Load Libsndfile from the specified path. Errors if the path isn't valid UTF8.
+    /// Load Libsndfile from the specified path. Errors if the path isn't valid
+    /// UTF8.
     pub fn load_libsndfile<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let c_str = std::ffi::CString::new(
             path.as_ref()

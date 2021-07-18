@@ -15,7 +15,8 @@ impl Handle {
         self
     }
 
-    /// Get the object's type if possible.  THis function will fail if Synthizer is not initialized.
+    /// Get the object's type if possible.  THis function will fail if Synthizer
+    /// is not initialized.
     pub fn get_type(&self) -> Result<ObjectType> {
         let mut out = 0;
         check_error(unsafe {
@@ -90,8 +91,8 @@ mod priv_traits {
     use super::*;
 
     /// Internal helper trait to convert things to handles.  We don't use `From`
-    /// because that's public: people should be using the bindings, not converting
-    /// handles directly.
+    /// because that's public: people should be using the bindings, not
+    /// converting handles directly.
     pub trait ToSyzHandle {
         fn to_syz_handle(&self) -> syz_Handle;
     }

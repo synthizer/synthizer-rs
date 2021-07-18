@@ -1,4 +1,5 @@
-//! Basic smoke test for casting. We don't check all the tables, just enough to know that it works.
+//! Basic smoke test for casting. We don't check all the tables, just enough to
+//! know that it works.
 use std::convert::TryInto;
 
 use synthizer as syz;

@@ -50,7 +50,8 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-/// Generate a Synthizer error from a code, collecting the last message as needed.
+/// Generate a Synthizer error from a code, collecting the last message as
+/// needed.
 pub(crate) fn error_from_code(code: syz_ErrorCode) -> Error {
     let msg_raw = unsafe { syz_getLastErrorMessage() };
     let msg_c = unsafe { std::ffi::CStr::from_ptr(msg_raw).to_string_lossy() };

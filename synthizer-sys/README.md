@@ -1,5 +1,8 @@
 # Low-level Synthizer bindings
 
+![CI Status](https://github.com/github/synthizer/synthizer-rs/workflows/main.yml/badge.svg)
+[GitHub Sponsors](https://github.com/sponsors/ahicks92)
+
 This crate contains low-level Synthizer bindings generated with bindgen, plus a
 vendored copy of Synthizer.  Currently, it is impossible to use dynamically
 linked/system versions of Synthizer, but this restriction will likely ebe lifted
