@@ -4,6 +4,7 @@ on:
 
 jobs:
   test:
+    if: 'false'
     runs-on: ${{matrix.os}}
     steps:
     - name: Checkout
@@ -20,4 +21,21 @@ jobs:
           - os: ubuntu-20.04
           - os: ubuntu-18.04
           - os: macos-latest
-          - os: windows-latest
+          - os: windows-2019
+
+  test:
+    runs-on: windows-2019
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure MSVC Environment Variables
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\enterprise\VC\Auxiliary\Build\vcvars%CI_ARCH%.bat"
+        set > %GITHUB_ENV%
+    - name: 'Run tests'
+      shell: cmd
+      run: |
+        cd %GITHUB_WORKSPACE%
+        rustup update
+        cargo test

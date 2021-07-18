@@ -20,9 +20,9 @@ fn main() {
 
     #[cfg(target_family = "unix")]
     {
-        #[cfg(not(target_os="macos"))]
+        #[cfg(not(target_os = "macos"))]
         println!("cargo:rustc-link-lib=stdc++");
-        #[cfg(target_os="macos")]
+        #[cfg(target_os = "macos")]
         println!("cargo:rustc-link-lib=c++");
     }
 }
