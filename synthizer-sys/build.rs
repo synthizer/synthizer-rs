@@ -1,4 +1,9 @@
 fn main() {
+    if let Ok(_) = std::env::var("DOCS_RS") {
+        // Docs don't link.
+        return;
+    }
+
     println!("cargo:rerun-if-changed=synthizer-vendored");
 
     let mut cfg = cmake::Config::new("synthizer-vendored");
