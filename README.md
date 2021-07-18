@@ -1,6 +1,6 @@
 # synthizer-rs
 
-![CI Status](https://github.com/github/synthizer/synthizer-rs/workflows/main.yml/badge.svg)
+![CI Status](https://github.com/synthizer/synthizer-rs/actions/workflows/ci.yaml/badge.svg)
 [GitHub Sponsors](https://github.com/sponsors/ahicks92)
 
 Official Rust bindings for [Synthizer](https://github.com/synthizer/synthizer).
