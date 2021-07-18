@@ -20,7 +20,7 @@ jobs:
           - os: ubuntu-20.04
           - os: ubuntu-18.04
           - os: macos-latest
-          - os: windows-2019
+
 
   test_windows:
     runs-on: windows-2019
