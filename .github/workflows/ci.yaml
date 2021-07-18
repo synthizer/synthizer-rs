@@ -31,7 +31,7 @@ jobs:
     - name: Configure MSVC Environment Variables
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\enterprise\VC\Auxiliary\Build\vcvars%CI_ARCH%.bat"
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\enterprise\VC\Auxiliary\Build\vcvars64.bat"
         set > %GITHUB_ENV%
     - name: 'Run tests'
       shell: cmd
