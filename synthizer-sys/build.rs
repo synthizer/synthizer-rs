@@ -17,8 +17,12 @@ fn main() {
 
     println!("cargo:rustc-link-search=all={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=synthizer");
+
     #[cfg(target_family = "unix")]
     {
+        #[cfg(not(target_os="macos"))]
         println!("cargo:rustc-link-lib=stdc++");
+        #[cfg(target_os="macos")]
+        println!("cargo:rustc-link-lib=c++");
     }
 }
