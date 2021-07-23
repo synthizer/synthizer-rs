@@ -64,6 +64,12 @@ impl Handle {
         Ok(ud_box)
     }
 
+    pub fn config_delete_behavior(&self, config: &DeleteBehaviorConfig) -> Result<()> {
+        check_error(unsafe {
+            syz_configDeleteBehavior(self.0, &config.cfg as *const syz_DeleteBehaviorConfig)
+        })
+    }
+
     #[allow(clippy::wrong_self_convention)]
     pub(crate) fn from_handle_internal(h: Handle) -> Handle {
         h

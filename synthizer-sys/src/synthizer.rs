@@ -193,7 +193,7 @@ extern "C" {
 extern "C" {
     pub fn syz_configDeleteBehavior(
         object: syz_Handle,
-        cfg: *mut syz_DeleteBehaviorConfig,
+        cfg: *const syz_DeleteBehaviorConfig,
     ) -> syz_ErrorCode;
 }
 extern "C" {
