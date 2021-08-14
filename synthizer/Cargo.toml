@@ -1,6 +1,6 @@
 [package]
 name = "synthizer"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Austin Hicks <ahicks@ahicks.io>"]
 edition = "2018"
 description = "bindings to Synthizer, a library for 3D audio and effects"
@@ -10,7 +10,7 @@ license = "Unlicense"
 keywords = ["audio", "gamedev"]
 
 [dependencies]
-synthizer-sys = { "path" = "../synthizer-sys", version = "0.9.0" }
+synthizer-sys = { "path" = "../synthizer-sys", version = "0.9.1" }
 
 lazy_static = "1.4.0"
 
