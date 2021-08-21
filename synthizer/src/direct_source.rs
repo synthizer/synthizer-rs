@@ -1,6 +1,6 @@
 use crate::internal_prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct DirectSource(pub(crate) Handle);
 
 impl DirectSource {

@@ -1,5 +1,6 @@
 use crate::internal_prelude::*;
 
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Handle(syz_Handle);
 
 impl Handle {

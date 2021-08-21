@@ -12,6 +12,7 @@ pub const DEFAULT_Q: f64 = 0.7071135624381276;
 ///
 /// The `Default` impl on this struct returns an identity filter designed with
 /// `syz_biquadDesignIdentity`, a filter which passes audio through unchanged.
+#[derive(Copy, Clone, Debug)]
 pub struct BiquadConfig {
     pub(crate) cfg: syz_BiquadConfig,
 }

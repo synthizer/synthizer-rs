@@ -2,7 +2,7 @@
 use crate::internal_prelude::*;
 
 /// The `Context` represents an audio device.
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd, Hash, Debug)]
 pub struct Context(pub(crate) Handle);
 
 impl Context {

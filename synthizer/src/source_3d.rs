@@ -1,6 +1,6 @@
 use crate::internal_prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Source3D(pub(crate) Handle);
 
 impl Source3D {

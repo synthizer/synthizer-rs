@@ -1,6 +1,6 @@
 use crate::internal_prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct GlobalEcho(pub(crate) Handle);
 
 /// Re-exported Synthizer `syz_EchoTapConfig` type.  Using this instead of a

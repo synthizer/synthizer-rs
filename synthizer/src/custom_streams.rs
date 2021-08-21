@@ -189,6 +189,7 @@ impl Drop for CustomStreamDef {
 
 /// A `StreamHandle` binds Synthizer custom streams, as well as other kinds of
 /// streaming functionality.
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct StreamHandle {
     handle: syz_Handle,
     // If set, this stream will move the given value into Synthizer userdata for freeing later.

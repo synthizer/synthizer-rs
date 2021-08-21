@@ -2,7 +2,7 @@ use crate::internal_prelude::*;
 
 /// Represents the source "base class".  It is possible to convert to this type
 /// from any source, in order to use source-common functionality.
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Source(pub(crate) Handle);
 
 impl Source {

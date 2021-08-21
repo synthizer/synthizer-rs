@@ -2,7 +2,7 @@ use crate::internal_prelude::*;
 
 /// Represents the generator "base class".  A [From] impl lets you get to this
 /// object from any kind of generator.
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Generator(pub(crate) Handle);
 
 impl Generator {

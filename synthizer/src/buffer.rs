@@ -2,7 +2,7 @@ use crate::internal_prelude::*;
 use std::os::raw::{c_char, c_uint, c_ulonglong};
 use std::path::Path;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Buffer(pub(crate) Handle);
 
 impl Buffer {
