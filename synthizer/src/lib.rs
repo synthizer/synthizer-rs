@@ -98,6 +98,7 @@ mod source;
 mod source_3d;
 mod streaming_generator;
 mod userdata;
+mod version;
 
 pub use angular_panned_source::*;
 pub use biquad::*;
@@ -121,3 +122,4 @@ pub use scalar_panned_source::*;
 pub use source::*;
 pub use source_3d::*;
 pub use streaming_generator::*;
+pub use version::*;
