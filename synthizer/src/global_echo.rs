@@ -13,7 +13,7 @@ impl GlobalEcho {
         wrap_constructor(|ud, cb| {
             let mut h = Default::default();
             check_error(unsafe {
-                syz_createGlobalEcho(&mut h, context.to_syz_handle(), ud, Some(cb))
+                syz_createGlobalEcho(&mut h, context.to_syz_handle(), null_mut(), ud, Some(cb))
             })?;
             Ok(GlobalEcho(Handle::new(h)))
         })

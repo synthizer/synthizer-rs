@@ -1,33 +1,32 @@
 use crate::internal_prelude::*;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
-pub struct PannedSource(pub(crate) Handle);
+pub struct ScalarPannedSource(pub(crate) Handle);
 
-impl PannedSource {
-    pub fn new(context: &Context) -> Result<PannedSource> {
+impl ScalarPannedSource {
+    pub fn new(
+        context: &Context,
+        panner_strategy: PannerStrategy,
+        panning_scalar: f64,
+    ) -> Result<ScalarPannedSource> {
         wrap_constructor(|ud, cb| {
             let mut h = Default::default();
             check_error(unsafe {
-                syz_createPannedSource(
+                syz_createScalarPannedSource(
                     &mut h as *mut syz_Handle,
                     context.to_syz_handle(),
+                    panner_strategy as i32,
+                    panning_scalar,
+                    std::ptr::null_mut(),
                     ud,
                     Some(cb),
                 )
             })?;
-            Ok(PannedSource(Handle::new(h)))
+            Ok(ScalarPannedSource(Handle::new(h)))
         })
     }
 
     source_properties!();
-    enum_p!(
-        PannerStrategy,
-        SYZ_P_PANNER_STRATEGY,
-        get_panner_strategy,
-        set_panner_strategy
-    );
-    double_p!(SYZ_P_ELEVATION, get_elevation, set_elevation);
-    double_p!(SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
     double_p!(SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
 
     object_common!();
@@ -35,4 +34,4 @@ impl PannedSource {
     source_common!();
 }
 
-handle_traits!(PannedSource);
+handle_traits!(ScalarPannedSource);

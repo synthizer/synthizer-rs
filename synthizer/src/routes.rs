@@ -64,7 +64,8 @@ pub(crate) use route_traits::*;
 
 impl RouteOutput for Handle {}
 impl RouteOutput for DirectSource {}
-impl RouteOutput for PannedSource {}
+impl RouteOutput for AngularPannedSource {}
+impl RouteOutput for ScalarPannedSource {}
 impl RouteOutput for Source3D {}
 
 impl RouteInput for Handle {}

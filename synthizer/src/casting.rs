@@ -37,7 +37,8 @@ downcast!(StreamingGenerator, Generator, Handle);
 
 downcast!(Source, Handle);
 downcast!(DirectSource, Source, Handle);
-downcast!(PannedSource, Source, Handle);
+downcast!(AngularPannedSource, Source, Handle);
+downcast!(ScalarPannedSource, Source, Handle);
 downcast!(Source3D, Source, Handle);
 
 mod cast_target {
@@ -89,11 +90,13 @@ cast!(StreamingGenerator, ObjectType::StreamingGenerator);
 cast!(
     Source,
     ObjectType::DirectSource,
-    ObjectType::PannedSource,
+    ObjectType::AngularPannedSource,
+    ObjectType::ScalarPannedSource,
     ObjectType::Source3D
 );
 cast!(DirectSource, ObjectType::DirectSource);
-cast!(PannedSource, ObjectType::PannedSource);
+cast!(AngularPannedSource, ObjectType::AngularPannedSource);
+cast!(ScalarPannedSource, ObjectType::ScalarPannedSource);
 cast!(Source3D, ObjectType::Source3D);
 
 // Macro to punch out a bunch of `TryFrom` impls.
@@ -122,5 +125,6 @@ try_from!(StreamingGenerator, Generator, Handle);
 
 try_from!(Source, Handle);
 try_from!(DirectSource, Source, Handle);
-try_from!(PannedSource, Source, Handle);
+try_from!(AngularPannedSource, Source, Handle);
+try_from!(ScalarPannedSource, Source, Handle);
 try_from!(Source3D, Source, Handle);

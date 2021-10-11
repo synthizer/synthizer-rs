@@ -11,6 +11,7 @@ impl DirectSource {
                 syz_createDirectSource(
                     &mut h as *mut syz_Handle,
                     context.to_syz_handle(),
+                    null_mut(),
                     ud,
                     Some(cb),
                 )

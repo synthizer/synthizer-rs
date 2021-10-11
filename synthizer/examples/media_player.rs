@@ -25,7 +25,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
     let ctx = syz::Context::new()?;
     ctx.set_default_panner_strategy(syz::PannerStrategy::Hrtf)?;
 
-    let src = syz::Source3D::new(&ctx)?;
+    let src = syz::Source3D::new(&ctx, syz::PannerStrategy::Delegate, (0.0, 0.0, 0.0))?;
     let gen = syz::BufferGenerator::new(&ctx)?;
     let syz_buf = syz::Buffer::from_file(input_file)?;
     gen.set_buffer(&syz_buf)?;

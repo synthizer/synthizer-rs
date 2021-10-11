@@ -22,6 +22,7 @@ impl StreamingGenerator {
                     &mut h,
                     context.to_syz_handle(),
                     c_str.as_ptr(),
+                    null_mut(),
                     ud,
                     Some(cb),
                 )
@@ -41,6 +42,7 @@ impl StreamingGenerator {
                     &mut out as *mut syz_Handle,
                     context.to_syz_handle(),
                     sh,
+                    null_mut(),
                     ud,
                     Some(cb),
                 )
@@ -73,6 +75,7 @@ impl StreamingGenerator {
                     protocol_ptr as *const c_char,
                     path_ptr as *const c_char,
                     std::mem::transmute(param),
+                    null_mut(),
                     ud,
                     Some(cb),
                 )

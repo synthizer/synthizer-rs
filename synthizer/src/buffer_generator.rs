@@ -8,7 +8,13 @@ impl BufferGenerator {
         wrap_constructor(|ud, cb| {
             let mut h = 0;
             check_error(unsafe {
-                syz_createBufferGenerator(&mut h as *mut u64, context.to_syz_handle(), ud, Some(cb))
+                syz_createBufferGenerator(
+                    &mut h as *mut u64,
+                    context.to_syz_handle(),
+                    null_mut(),
+                    ud,
+                    Some(cb),
+                )
             })?;
             Ok(BufferGenerator(Handle::new(h)))
         })

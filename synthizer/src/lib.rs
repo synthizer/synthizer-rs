@@ -74,6 +74,7 @@ mod property_tables;
 #[macro_use]
 mod handle;
 
+mod angular_panned_source;
 mod biquad;
 mod buffer;
 mod buffer_generator;
@@ -91,13 +92,14 @@ mod global_fdn_reverb;
 mod initialization;
 mod internal_prelude;
 mod noise_generator;
-mod panned_source;
 mod routes;
+mod scalar_panned_source;
 mod source;
 mod source_3d;
 mod streaming_generator;
 mod userdata;
 
+pub use angular_panned_source::*;
 pub use biquad::*;
 pub use buffer::*;
 pub use buffer_generator::*;
@@ -114,8 +116,8 @@ pub use global_fdn_reverb::*;
 pub use handle::*;
 pub use initialization::*;
 pub use noise_generator::*;
-pub use panned_source::*;
 pub use routes::*;
+pub use scalar_panned_source::*;
 pub use source::*;
 pub use source_3d::*;
 pub use streaming_generator::*;

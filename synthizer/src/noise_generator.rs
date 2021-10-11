@@ -12,6 +12,7 @@ impl NoiseGenerator {
                     &mut h as *mut syz_Handle,
                     context.to_syz_handle(),
                     channels,
+                    null_mut(),
                     ud,
                     Some(cb),
                 )
