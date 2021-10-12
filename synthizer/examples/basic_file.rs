@@ -12,7 +12,7 @@ fn main() -> syz::Result<()> {
     let src = syz::DirectSource::new(&context)?;
     let generator = syz::BufferGenerator::new(&context)?;
     let buffer = syz::Buffer::from_file(args[1].as_str())?;
-    generator.set_buffer(&buffer)?;
+    generator.buffer().set(&buffer)?;
     src.add_generator(&generator)?;
 
     println!("Press enter to exit");

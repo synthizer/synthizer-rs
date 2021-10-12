@@ -23,12 +23,13 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
     let _guard = init_cfg.initialize()?;
 
     let ctx = syz::Context::new()?;
-    ctx.set_default_panner_strategy(syz::PannerStrategy::Hrtf)?;
+    ctx.default_panner_strategy()
+        .set(syz::PannerStrategy::Hrtf)?;
 
     let src = syz::Source3D::new(&ctx, syz::PannerStrategy::Delegate, (0.0, 0.0, 0.0))?;
     let gen = syz::BufferGenerator::new(&ctx)?;
     let syz_buf = syz::Buffer::from_file(input_file)?;
-    gen.set_buffer(&syz_buf)?;
+    gen.buffer().set(&syz_buf)?;
     src.add_generator(&gen)?;
 
     let mut looping = false;
@@ -63,7 +64,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
             }
             "loop" => {
                 looping = !looping;
-                gen.set_looping(looping)?;
+                gen.looping().set(looping)?;
             }
             "seek" => {
                 if parts.len() != 2 {
@@ -76,7 +77,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
                         continue;
                     }
                 };
-                gen.set_playback_position(pos)?;
+                gen.playback_position().set(pos)?;
             }
             "pos" => {
                 if parts.len() != 4 {
@@ -93,7 +94,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
                         continue;
                     }
                 };
-                src.set_position(pos)?;
+                src.position().set(pos)?;
             }
             "gain" => {
                 if parts.len() != 2 {
@@ -108,7 +109,7 @@ fn main_impl(input_file: &str) -> syz::Result<()> {
                     }
                 };
                 let gain = 10.0f64.powf(gain_db / 20.0);
-                src.set_gain(gain)?;
+                src.gain().set(gain)?;
             }
             _ => {
                 println!("Invalid command. Type help for usage");

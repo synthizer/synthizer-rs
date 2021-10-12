@@ -23,8 +23,8 @@ fn main() -> Result<()> {
     let buffer = syz::Buffer::from_float_array(SR, 2, &data[..])?;
     let gen = syz::BufferGenerator::new(&ctx)?;
     let src = syz::DirectSource::new(&ctx)?;
-    gen.set_buffer(&buffer)?;
-    gen.set_looping(true)?;
+    gen.buffer().set(&buffer)?;
+    gen.looping().set(true)?;
     src.add_generator(&gen)?;
 
     println!("Press enter to exit");

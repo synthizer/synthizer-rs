@@ -29,8 +29,8 @@ impl AngularPannedSource {
     }
 
     source_properties!();
-    double_p!(SYZ_P_ELEVATION, get_elevation, set_elevation);
-    double_p!(SYZ_P_AZIMUTH, get_azimuth, set_azimuth);
+    double_p!(SYZ_P_ELEVATION, elevation);
+    double_p!(SYZ_P_AZIMUTH, azimuth);
 
     object_common!();
     pausable_common!();

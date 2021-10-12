@@ -18,7 +18,7 @@ fn main() -> syz::Result<()> {
             .build();
         let src = syz::DirectSource::new(&context)?;
         let generator = syz::BufferGenerator::new(&context)?;
-        generator.set_buffer(&buffer)?;
+        generator.buffer().set(&buffer)?;
         src.add_generator(&generator)?;
         src.config_delete_behavior(&del_cfg)?;
         generator.config_delete_behavior(&del_cfg)?;

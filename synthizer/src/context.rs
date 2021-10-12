@@ -74,46 +74,27 @@ impl Context {
         })
     }
 
-    double_p!(SYZ_P_GAIN, get_gain, set_gain);
+    double_p!(SYZ_P_GAIN, gain);
     enum_p!(
         PannerStrategy,
         SYZ_P_DEFAULT_PANNER_STRATEGY,
-        get_default_panner_strategy,
-        set_default_panner_strategy
+        default_panner_strategy
     );
     enum_p!(
         DistanceModel,
         SYZ_P_DEFAULT_DISTANCE_MODEL,
-        get_default_distance_model,
-        set_default_distance_model
+        default_distance_modle
     );
-    double_p!(
-        SYZ_P_DEFAULT_DISTANCE_REF,
-        get_default_distance_ref,
-        set_default_distance_ref
-    );
-    double_p!(
-        SYZ_P_DEFAULT_DISTANCE_MAX,
-        get_default_distance_max,
-        set_default_distance_max
-    );
-    double_p!(
-        SYZ_P_DEFAULT_ROLLOFF,
-        get_default_rolloff,
-        set_default_rolloff
-    );
-    double_p!(
-        SYZ_P_DEFAULT_CLOSENESS_BOOST,
-        get_default_closeness_boost,
-        set_default_closeness_boost
-    );
+    double_p!(SYZ_P_DEFAULT_DISTANCE_REF, default_distance_ref);
+    double_p!(SYZ_P_DEFAULT_DISTANCE_MAX, default_distance_max);
+    double_p!(SYZ_P_DEFAULT_ROLLOFF, default_rolloff);
+    double_p!(SYZ_P_DEFAULT_CLOSENESS_BOOST, default_closeness_boost);
     double_p!(
         SYZ_P_DEFAULT_CLOSENESS_BOOST_DISTANCE,
-        get_default_closeness_boost_distance,
-        set_default_closeness_boost_distance
+        default_closeness_boost_distance
     );
-    double3_p!(SYZ_P_POSITION, get_position, set_position);
-    double6_p!(SYZ_P_ORIENTATION, get_orientation, set_orientation);
+    double3_p!(SYZ_P_POSITION, position);
+    double6_p!(SYZ_P_ORIENTATION, orientation);
 
     object_common!();
     pausable_common!();

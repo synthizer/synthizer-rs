@@ -85,12 +85,8 @@ impl StreamingGenerator {
     }
 
     generator_properties!();
-    bool_p!(SYZ_P_LOOPING, get_looping, set_looping);
-    double_p!(
-        SYZ_P_PLAYBACK_POSITION,
-        get_playback_position,
-        set_playback_position
-    );
+    bool_p!(SYZ_P_LOOPING, looping);
+    double_p!(SYZ_P_PLAYBACK_POSITION, playback_position);
 
     object_common!();
     pausable_common!();

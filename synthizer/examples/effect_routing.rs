@@ -17,13 +17,13 @@ fn main() -> syz::Result<()> {
     let gen = syz::BufferGenerator::new(&ctx)?;
     let buffer = syz::Buffer::from_file(args[1].as_str())?;
     let src = syz::DirectSource::new(&ctx)?;
-    gen.set_buffer(&buffer)?;
-    gen.set_looping(true)?;
+    gen.buffer().set(&buffer)?;
+    gen.looping().set(true)?;
     src.add_generator(&gen)?;
 
     // Make a reverb.
     let reverb = syz::GlobalFdnReverb::new(&ctx)?;
-    reverb.set_t60(10.0)?;
+    reverb.t60().set(10.0)?;
 
     // Set up initial connection without configuration.
     ctx.config_route_simple(&src, &reverb)?;

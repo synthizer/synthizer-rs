@@ -21,13 +21,9 @@ impl BufferGenerator {
     }
 
     generator_properties!();
-    bool_p!(SYZ_P_LOOPING, get_looping, set_looping);
-    double_p!(
-        SYZ_P_PLAYBACK_POSITION,
-        get_playback_position,
-        set_playback_position
-    );
-    object_p!(SYZ_P_BUFFER, set_buffer);
+    bool_p!(SYZ_P_LOOPING, looping);
+    double_p!(SYZ_P_PLAYBACK_POSITION, playback_position);
+    object_p!(SYZ_P_BUFFER, buffer);
 
     object_common!();
     pausable_common!();

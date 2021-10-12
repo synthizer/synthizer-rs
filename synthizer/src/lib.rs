@@ -31,12 +31,11 @@
 //!
 //! # Properties
 //!
-//! Properties are modeled as `get_property` and `set_property` functions.  For
-//! example `get_gain` and `set_gain` for `SYZ_P_GAIN` from the C API.
-//!
-//! Object properties aren't type checked but error if using an object of the
-//! wrong type at runtime.  An internal trait, `ToSyzHandle`, is implemented for
-//! all library types.
+//! Properties are modeled as a `property()` method which returns an
+//! intermediate object that has methods on it. For example,
+//! `obj.playback_position().set(5.0)`. Object properties aren't type checked
+//! but error if using an object of the wrong type at runtime.  An internal
+//! trait, `ToSyzHandle`, is implemented for all library types.
 //!
 //! # Common Functionality
 //!
@@ -92,6 +91,7 @@ mod global_fdn_reverb;
 mod initialization;
 mod internal_prelude;
 mod noise_generator;
+mod properties;
 mod routes;
 mod scalar_panned_source;
 mod source;
@@ -117,6 +117,7 @@ pub use global_fdn_reverb::*;
 pub use handle::*;
 pub use initialization::*;
 pub use noise_generator::*;
+pub use properties::*;
 pub use routes::*;
 pub use scalar_panned_source::*;
 pub use source::*;

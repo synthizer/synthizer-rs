@@ -27,7 +27,7 @@ impl ScalarPannedSource {
     }
 
     source_properties!();
-    double_p!(SYZ_P_PANNING_SCALAR, get_panning_scalar, set_panning_scalar);
+    double_p!(SYZ_P_PANNING_SCALAR, panning_scalar);
 
     object_common!();
     pausable_common!();
