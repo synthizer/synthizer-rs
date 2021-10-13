@@ -6,7 +6,7 @@ project(synthizer VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # Synthizer version.
-add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=11 SYZ_PATCH=1)
+add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=11 SYZ_PATCH=2)
 
 include(CTest)
 include(CheckCXXSourceRuns)
@@ -249,6 +249,10 @@ if("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC")
 
   add_executable(test_property_automation_timeline test/property_automation_timeline.cpp)
   target_link_libraries(test_property_automation_timeline synthizer)
+
+
+  add_executable(test_seeking test/seeking.cpp)
+  target_link_libraries(test_seeking synthizer)
 
   add_test(NAME delay_line COMMAND delay_line_test)
   add_test(NAME latch COMMAND test_latch)
