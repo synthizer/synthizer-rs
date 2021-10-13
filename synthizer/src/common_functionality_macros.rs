@@ -45,6 +45,9 @@ macro_rules! object_common {
         pub(crate) fn from_handle_internal(h: Handle) -> Self {
             Self(h)
         }
+
+        double_p!(SYZ_P_CURRENT_TIME, current_time);
+        double_p!(SYZ_P_SUGGESTED_AUTOMATION_TIME, suggested_automation_time);
     };
 }
 

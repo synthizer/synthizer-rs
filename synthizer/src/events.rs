@@ -3,15 +3,15 @@ use crate::internal_prelude::*;
 #[non_exhaustive]
 #[repr(i32)]
 pub enum EventType {
-    // Exposed only because Rust doesn't allow having private enum variants.
-    Invalid = SYZ_EVENT_TYPE_INVALID as i32,
-    Finished = SYZ_EVENT_TYPE_FINISHED as i32,
-    Looped = SYZ_EVENT_TYPE_LOOPED as i32,
+    Finished,
+    Looped,
+    UserAutomation { param: std::os::raw::c_ulonglong },
 }
 
 pub struct Event {
     pub source: Handle,
     pub context: Option<Context>,
+    /// Holds the event type, as well as any parameters/payload if applicable.
     pub r#type: EventType,
 }
 
@@ -35,12 +35,23 @@ impl<'a> EventIterator<'a> {
             syz_contextGetNextEvent(&mut evt as *mut syz_Event, self.context.to_syz_handle(), 0)
         })?;
 
-        if evt.type_ == SYZ_EVENT_TYPE_INVALID as i32 {
-            return Ok(None);
-        }
+        let r#type = match evt.type_ as u32 {
+            SYZ_EVENT_TYPE_INVALID => {
+                return Ok(None);
+            }
+            SYZ_EVENT_TYPE_FINISHED => EventType::Finished,
+            SYZ_EVENT_TYPE_LOOPED => EventType::Looped,
+            SYZ_EVENT_TYPE_USER_AUTOMATION => EventType::UserAutomation {
+                param: unsafe { evt.payload.user_automation.param },
+            },
+            _ => {
+                unreachable!()
+            }
+        };
 
         // be careful here: we must make sure to deinitialize the event before
-        // returning.
+        // returning.  Record whether or not we incremented references, so we
+        // can potentially decrement them later.
         let inc_ret = check_error(unsafe { syz_handleIncRef(evt.source) })
             .and_then(|_| {
                 source = Some(Handle::new(evt.source));
@@ -52,8 +63,6 @@ impl<'a> EventIterator<'a> {
             .map(|_| {
                 context = Some(Context(Handle::new(evt.context)));
             });
-
-        let r#type = unsafe { std::mem::transmute(evt.type_) };
 
         unsafe { syz_eventDeinit(&mut evt as *mut syz_Event) };
         inc_ret?;

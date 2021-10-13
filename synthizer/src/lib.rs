@@ -74,6 +74,7 @@ mod property_tables;
 mod handle;
 
 mod angular_panned_source;
+mod automation_batch;
 mod biquad;
 mod buffer;
 mod buffer_generator;
@@ -101,6 +102,7 @@ mod userdata;
 mod version;
 
 pub use angular_panned_source::*;
+pub use automation_batch::*;
 pub use biquad::*;
 pub use buffer::*;
 pub use buffer_generator::*;

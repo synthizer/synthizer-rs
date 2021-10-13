@@ -3,7 +3,7 @@ use crate::internal_prelude::*;
 /// Representation of a property backed by an i32.
 pub struct IntProperty<'a> {
     handle: syz_Handle,
-    property: i32,
+    pub(crate) property: i32,
     _pd: PhantomData<&'a ()>,
 }
 
@@ -29,7 +29,7 @@ impl<'a> IntProperty<'a> {
 
 /// A property backed by a Synthizer enum.
 pub struct EnumProperty<'a, T> {
-    iprop: IntProperty<'a>,
+    pub(crate) iprop: IntProperty<'a>,
     _pd: std::marker::PhantomData<&'a T>,
 }
 
@@ -52,7 +52,7 @@ impl<'a, T: I32TransmutableEnum> EnumProperty<'a, T> {
 }
 
 pub struct BoolProperty<'a> {
-    iprop: IntProperty<'a>,
+    pub(crate) iprop: IntProperty<'a>,
 }
 
 impl<'a> BoolProperty<'a> {
@@ -73,7 +73,7 @@ impl<'a> BoolProperty<'a> {
 
 pub struct DoubleProperty<'a> {
     handle: syz_Handle,
-    property: i32,
+    pub(crate) property: i32,
     _pd: PhantomData<&'a ()>,
 }
 
@@ -99,7 +99,7 @@ impl<'a> DoubleProperty<'a> {
 
 pub struct Double3Property<'a> {
     handle: syz_Handle,
-    property: i32,
+    pub(crate) property: i32,
     _pd: PhantomData<&'a ()>,
 }
 
@@ -135,7 +135,7 @@ impl<'a> Double3Property<'a> {
 
 pub struct Double6Property<'a> {
     handle: syz_Handle,
-    property: i32,
+    pub(crate) property: i32,
     _pd: PhantomData<&'a ()>,
 }
 
@@ -173,7 +173,7 @@ impl<'a> Double6Property<'a> {
 
 pub struct ObjectProperty<'a> {
     handle: syz_Handle,
-    property: i32,
+    pub(crate) property: i32,
     _pd: PhantomData<&'a ()>,
 }
 
@@ -188,5 +188,55 @@ impl<'a> ObjectProperty<'a> {
 
     pub fn set(&self, handle: &impl ToSyzHandle) -> Result<()> {
         check_error(unsafe { syz_setO(self.handle, self.property, handle.to_syz_handle()) })
+    }
+}
+
+/// trait to let clear_properties etc. for automation work on any property.
+pub(crate) mod syz_property {
+    pub trait SyzProperty {
+        fn as_i32(&self) -> i32;
+    }
+}
+pub(crate) use syz_property::*;
+
+impl<'a> SyzProperty for IntProperty<'a> {
+    fn as_i32(&self) -> i32 {
+        self.property
+    }
+}
+
+impl<'a> SyzProperty for BoolProperty<'a> {
+    fn as_i32(&self) -> i32 {
+        self.iprop.as_i32()
+    }
+}
+
+impl<'a, T> SyzProperty for EnumProperty<'a, T> {
+    fn as_i32(&self) -> i32 {
+        self.iprop.as_i32()
+    }
+}
+
+impl<'a> SyzProperty for DoubleProperty<'a> {
+    fn as_i32(&self) -> i32 {
+        self.property
+    }
+}
+
+impl<'a> SyzProperty for Double3Property<'a> {
+    fn as_i32(&self) -> i32 {
+        self.property
+    }
+}
+
+impl<'a> SyzProperty for Double6Property<'a> {
+    fn as_i32(&self) -> i32 {
+        self.property
+    }
+}
+
+impl<'a> SyzProperty for ObjectProperty<'a> {
+    fn as_i32(&self) -> i32 {
+        self.property
     }
 }

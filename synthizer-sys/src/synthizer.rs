@@ -521,7 +521,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct syz_AutomationPoint {
-    pub interpolation_type: ::std::os::raw::c_uint,
+    pub interpolation_type: ::std::os::raw::c_int,
     pub values: [f64; 6usize],
     pub flags: ::std::os::raw::c_ulonglong,
 }
@@ -688,79 +688,76 @@ fn bindgen_test_layout_syz_AutomationSendUserEventCommand() {
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct syz_AutomationCommand {
-    pub target: syz_Handle,
-    pub time: f64,
-    pub type_: ::std::os::raw::c_int,
-    pub flags: ::std::os::raw::c_uint,
-    pub params: syz_AutomationCommand__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union syz_AutomationCommand__bindgen_ty_1 {
+pub union syz_AutomationCommandParams {
     pub append_to_property: syz_AutomationAppendPropertyCommand,
     pub clear_property: syz_AutomationClearPropertyCommand,
     pub send_user_event: syz_AutomationSendUserEventCommand,
 }
 #[test]
-fn bindgen_test_layout_syz_AutomationCommand__bindgen_ty_1() {
+fn bindgen_test_layout_syz_AutomationCommandParams() {
     assert_eq!(
-        ::std::mem::size_of::<syz_AutomationCommand__bindgen_ty_1>(),
+        ::std::mem::size_of::<syz_AutomationCommandParams>(),
         72usize,
-        concat!("Size of: ", stringify!(syz_AutomationCommand__bindgen_ty_1))
+        concat!("Size of: ", stringify!(syz_AutomationCommandParams))
     );
     assert_eq!(
-        ::std::mem::align_of::<syz_AutomationCommand__bindgen_ty_1>(),
+        ::std::mem::align_of::<syz_AutomationCommandParams>(),
         8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(syz_AutomationCommand__bindgen_ty_1)
-        )
+        concat!("Alignment of ", stringify!(syz_AutomationCommandParams))
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<syz_AutomationCommand__bindgen_ty_1>())).append_to_property
-                as *const _ as usize
+            &(*(::std::ptr::null::<syz_AutomationCommandParams>())).append_to_property as *const _
+                as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(syz_AutomationCommand__bindgen_ty_1),
+            stringify!(syz_AutomationCommandParams),
             "::",
             stringify!(append_to_property)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<syz_AutomationCommand__bindgen_ty_1>())).clear_property
-                as *const _ as usize
+            &(*(::std::ptr::null::<syz_AutomationCommandParams>())).clear_property as *const _
+                as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(syz_AutomationCommand__bindgen_ty_1),
+            stringify!(syz_AutomationCommandParams),
             "::",
             stringify!(clear_property)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<syz_AutomationCommand__bindgen_ty_1>())).send_user_event
-                as *const _ as usize
+            &(*(::std::ptr::null::<syz_AutomationCommandParams>())).send_user_event as *const _
+                as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(syz_AutomationCommand__bindgen_ty_1),
+            stringify!(syz_AutomationCommandParams),
             "::",
             stringify!(send_user_event)
         )
     );
 }
-impl Default for syz_AutomationCommand__bindgen_ty_1 {
+impl Default for syz_AutomationCommandParams {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct syz_AutomationCommand {
+    pub target: syz_Handle,
+    pub time: f64,
+    pub type_: ::std::os::raw::c_int,
+    pub flags: ::std::os::raw::c_uint,
+    pub params: syz_AutomationCommandParams,
 }
 #[test]
 fn bindgen_test_layout_syz_AutomationCommand() {

@@ -63,6 +63,7 @@ impl_transmutable!(NoiseType);
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 #[repr(i32)]
 pub enum ObjectType {
+    AutomationBatch = SYZ_OTYPE_AUTOMATION_BATCH as i32,
     Context = SYZ_OTYPE_CONTEXT as i32,
     Buffer = SYZ_OTYPE_BUFFER as i32,
     BufferGenerator = SYZ_OTYPE_BUFFER_GENERATOR as i32,
@@ -78,3 +79,12 @@ pub enum ObjectType {
 }
 
 impl_transmutable!(ObjectType);
+
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
+#[repr(i32)]
+pub enum InterpolationType {
+    None = SYZ_INTERPOLATION_TYPE_NONE as i32,
+    Linear = SYZ_INTERPOLATION_TYPE_LINEAR as i32,
+}
+
+impl_transmutable!(InterpolationType);
