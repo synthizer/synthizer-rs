@@ -10,7 +10,7 @@ license = "Unlicense"
 keywords = ["audio", "gamedev"]
 
 [dependencies]
-synthizer-sys = { "path" = "../synthizer-sys", version = "0.9.2" }
+synthizer-sys = { "path" = "../synthizer-sys", version = "0.10.0" }
 
 lazy_static = "1.4.0"
 
