@@ -43,7 +43,7 @@ impl<T> CustomStreamData<T> {
     }
 }
 
-extern "C" fn stream_read_cb<T: Read>(
+pub(crate) extern "C" fn stream_read_cb<T: Read>(
     read: *mut c_ulonglong,
     requested: c_ulonglong,
     destination: *mut c_char,

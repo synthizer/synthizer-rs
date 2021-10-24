@@ -1,6 +1,9 @@
-use crate::internal_prelude::*;
+use std::io::Read;
 use std::os::raw::{c_char, c_uint, c_ulonglong};
 use std::path::Path;
+
+use crate::internal_prelude::*;
+use crate::*;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Buffer(pub(crate) Handle);
@@ -102,6 +105,51 @@ impl Buffer {
             )
         })?;
         Ok(Buffer(Handle::new(h)))
+    }
+
+    /// Decode a buffer from a `Read` implementation.
+    ///
+    /// This avoids the Sync and 'static requirements on going through a stream
+    /// handle.
+    pub fn from_reader<R: Read>(reader: R) -> Result<Buffer> {
+        let boxed = Box::new(reader);
+        let raw = Box::into_raw(boxed);
+        // We know that Synthizer is done decoding by the time we have a buffer, and that after that point no more read happens; additionally buffer decoding happens inline.  Consequently, we can just always drop this pointer when we go out of scope.
+        let _drop_reader =
+            scopeguard::guard(raw, |raw| std::mem::drop(unsafe { Box::from_raw(raw) }));
+        let mut sdef = syz_CustomStreamDef {
+            read_cb: Some(stream_read_cb::<R>),
+            length: -1,
+            userdata: raw as *mut std::ffi::c_void,
+            ..Default::default()
+        };
+
+        let mut sh = 0;
+        check_error(unsafe {
+            syz_createStreamHandleFromCustomStream(
+                &mut sh as *mut syz_Handle,
+                &mut sdef as *mut syz_CustomStreamDef,
+                null_mut(),
+                None,
+            )
+        })?;
+        // Immediately put this behind a handle that doesn't escape this
+        // function, which ensures that we always drop it when we go out of
+        // scope.
+        let sh = Handle::new(sh);
+
+        wrap_constructor(|ud, cb| {
+            let mut h = Default::default();
+            check_error(unsafe {
+                syz_createBufferFromStreamHandle(
+                    &mut h as *mut syz_Handle,
+                    sh.to_syz_handle(),
+                    ud,
+                    Some(cb),
+                )
+            })?;
+            Ok(Buffer(Handle::new(h)))
+        })
     }
 
     pub fn get_length_in_samples(&self) -> Result<u32> {

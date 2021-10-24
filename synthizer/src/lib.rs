@@ -66,6 +66,13 @@
 //! info.  In general, it is possible to convert anything implementing
 //! [std::io::Read] and [std::io::Seek] to a custom stream by implementing
 //! [CloseStream] for that type or a wrapper struct thereof.
+//!
+//! # Optional Features
+//!
+//! Synthizer has the following optional features:
+//!
+//! - `asset_lru`: Enable support for `asset_lru` via `AssetLruDecoder`, which
+//!   implements the `asset_lru` decoding traits.
 #[macro_use]
 mod common_functionality_macros;
 #[macro_use]
@@ -74,6 +81,8 @@ mod property_tables;
 mod handle;
 
 mod angular_panned_source;
+#[cfg(feature = "asset_lru")]
+mod asset_lru;
 mod automation_batch;
 mod biquad;
 mod buffer;
@@ -101,6 +110,8 @@ mod streaming_generator;
 mod userdata;
 mod version;
 
+#[cfg(feature = "asset_lru")]
+pub use crate::asset_lru::*;
 pub use angular_panned_source::*;
 pub use automation_batch::*;
 pub use biquad::*;
