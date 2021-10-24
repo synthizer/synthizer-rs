@@ -1130,6 +1130,12 @@ extern "C" {
     pub fn syz_bufferGetLengthInSeconds(out: *mut f64, buffer: syz_Handle) -> syz_ErrorCode;
 }
 extern "C" {
+    pub fn syz_bufferGetSizeInBytes(
+        size: *mut ::std::os::raw::c_ulonglong,
+        buffer: syz_Handle,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
     pub fn syz_createBufferGenerator(
         out: *mut syz_Handle,
         context: syz_Handle,
