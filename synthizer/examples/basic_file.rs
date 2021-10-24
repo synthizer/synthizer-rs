@@ -11,7 +11,10 @@ fn main() -> syz::Result<()> {
     let context = syz::Context::new()?;
     let src = syz::DirectSource::new(&context)?;
     let generator = syz::BufferGenerator::new(&context)?;
+
     let buffer = syz::Buffer::from_file(args[1].as_str())?;
+    println!("Size of buffer in bytes is {}", buffer.get_size_in_bytes()?);
+
     generator.buffer().set(&buffer)?;
     src.add_generator(&generator)?;
 

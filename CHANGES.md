@@ -1,6 +1,7 @@
 # 0.4.1 (WIP)
 
 - Upgrade Synthizer to 0.11.4
+- Bind `syz_bufferGetSizeInBytes`.
 
 # 0.4.0 (2020-10-15)
 

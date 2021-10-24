@@ -126,6 +126,13 @@ impl Buffer {
         Ok(out)
     }
 
+    pub fn get_size_in_bytes(&self) -> Result<u64> {
+        let mut out = 0;
+        check_error(unsafe {
+            syz_bufferGetSizeInBytes(&mut out as *mut u64, self.to_syz_handle())
+        })?;
+        Ok(out)
+    }
     object_common!();
 }
 
