@@ -29,9 +29,9 @@ impl<T: Read + CloseStream + Send + 'static> Stream for T {}
 pub trait SeekableStream: Stream + Seek {}
 impl<T: Stream + Seek> SeekableStream for T {}
 
-struct CustomStreamData<T> {
-    err_msg: CString,
-    stream: T,
+pub(crate) struct CustomStreamData<T> {
+    pub(crate) err_msg: CString,
+    pub(crate) stream: T,
 }
 
 impl<T> CustomStreamData<T> {
@@ -65,7 +65,7 @@ pub(crate) extern "C" fn stream_read_cb<T: Read>(
     }
 }
 
-extern "C" fn seek_cb<T: Seek>(
+pub(crate) extern "C" fn stream_seek_cb<T: Seek>(
     pos: c_ulonglong,
     userdata: *mut c_void,
     err_msg: *mut *const c_char,
@@ -119,7 +119,7 @@ fn fillout_seekable<T: SeekableStream>(
     dest: &mut syz_CustomStreamDef,
     val: &mut T,
 ) -> std::io::Result<()> {
-    dest.seek_cb = Some(seek_cb::<T>);
+    dest.seek_cb = Some(stream_seek_cb::<T>);
 
     val.seek(std::io::SeekFrom::End(0))?;
     dest.length = val.stream_position()? as c_longlong;

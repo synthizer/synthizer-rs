@@ -1,4 +1,4 @@
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Seek};
 
 use ::asset_lru::Decoder;
 
@@ -33,9 +33,9 @@ impl Decoder for BufferAssetLruDecoder {
     type Error = Error;
     type Output = Buffer;
 
-    fn decode<R: Read>(&self, reader: R) -> Result<Buffer> {
+    fn decode<R: Read + Seek>(&self, reader: R) -> Result<Buffer> {
         let br = BufReader::new(reader);
-        Buffer::from_reader(br)
+        Buffer::from_read_seek(br)
     }
 
     fn estimate_cost(&self, buffer: &Buffer) -> Result<u64> {

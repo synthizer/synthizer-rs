@@ -1,5 +1,5 @@
-use std::io::Read;
-use std::os::raw::{c_char, c_uint, c_ulonglong};
+use std::io::{Read, Seek};
+use std::os::raw::{c_char, c_longlong, c_uint, c_ulonglong};
 use std::path::Path;
 
 use crate::internal_prelude::*;
@@ -107,20 +107,32 @@ impl Buffer {
         Ok(Buffer(Handle::new(h)))
     }
 
-    /// Decode a buffer from a `Read` implementation.
+    /// Decode a buffer from a `Read + Seek` implementation.
     ///
     /// This avoids the Sync and 'static requirements on going through a stream
     /// handle.
-    pub fn from_reader<R: Read>(reader: R) -> Result<Buffer> {
-        let boxed = Box::new(reader);
-        let raw = Box::into_raw(boxed);
-        // We know that Synthizer is done decoding by the time we have a buffer, and that after that point no more read happens; additionally buffer decoding happens inline.  Consequently, we can just always drop this pointer when we go out of scope.
-        let _drop_reader =
-            scopeguard::guard(raw, |raw| std::mem::drop(unsafe { Box::from_raw(raw) }));
+    ///
+    /// We require `Seek` as well because there are some formats that Synthizer
+    /// can't decode without it, most notably wav.
+    pub fn from_read_seek<R: Read + Seek>(mut reader: R) -> Result<Buffer> {
+        let size = reader
+            .seek(std::io::SeekFrom::End(0))
+            .and_then(|_| reader.stream_position())
+            .and_then(|_| reader.seek(std::io::SeekFrom::Start(0)))
+            .map_err(|x| Error::rust_error(&format!("{}", x)))?;
+
+        let cdata = CustomStreamData {
+            err_msg: Default::default(),
+            stream: reader,
+        };
+
+        let mut boxed = Box::new(cdata);
+
         let mut sdef = syz_CustomStreamDef {
             read_cb: Some(stream_read_cb::<R>),
-            length: -1,
-            userdata: raw as *mut std::ffi::c_void,
+            seek_cb: Some(stream_seek_cb::<R>),
+            length: size as c_longlong,
+            userdata: &mut *boxed as *mut CustomStreamData<R> as *mut std::ffi::c_void,
             ..Default::default()
         };
 

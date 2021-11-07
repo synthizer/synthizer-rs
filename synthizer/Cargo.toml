@@ -13,8 +13,7 @@ keywords = ["audio", "gamedev"]
 synthizer-sys = { "path" = "../synthizer-sys", version = "0.10.1" }
 
 lazy_static = "1.4.0"
-asset_lru = { version = "0.0.3", optional = true }
-scopeguard = "1.1.0"
+asset_lru = { version = "0.1.2", optional = true }
 
 [dev-dependencies]
 
