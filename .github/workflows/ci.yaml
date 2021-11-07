@@ -13,7 +13,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         rustup update
-        cargo test
+        cargo check --all-targets --all-features
+        cargo test --all-features
     strategy:
       matrix:
         include:
@@ -36,4 +37,5 @@ jobs:
       run: |
         cd %GITHUB_WORKSPACE%
         rustup update
-        cargo test
+        cargo check --all-targets --all-features
+        cargo test --all-features
