@@ -26,7 +26,7 @@ impl Buffer {
         })
     }
 
-    pub fn from_encoded_data(data: &&[u8]) -> Result<Buffer> {
+    pub fn from_encoded_data(data: &[u8]) -> Result<Buffer> {
         let mut h = Default::default();
         check_error(unsafe {
             syz_createBufferFromEncodedData(
