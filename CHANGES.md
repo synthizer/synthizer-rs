@@ -1,7 +1,8 @@
-# 0.4.2 (WIP)
+# 0.4.2 (2021-11-07)
 
 - Upgrade Synthizer to 0.11.5.
-- Add a method to build buffers from a read+seek pair without having to go through the entire custom stream infrastructure.
+- Add a method to build buffers from a read+seek pair without having to go
+  through the entire custom stream infrastructure.
 - Add support for [asset_lru](https://docs.rs/asset_lru) via `AssetLruDecoder`
   as an optional feature.
 
