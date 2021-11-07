@@ -1,3 +1,7 @@
+# 0.4.2 (WIP)
+
+- Upgrade Synthizer to 0.11.5
+
 # 0.4.1 (2021-10-24)
 
 - Upgrade Synthizer to 0.11.4

@@ -1031,7 +1031,7 @@ extern "C" {
 extern "C" {
     pub fn syz_createStreamHandleFromCustomStream(
         out: *mut syz_Handle,
-        callbacks: *mut syz_CustomStreamDef,
+        callbacks: *const syz_CustomStreamDef,
         userdata: *mut ::std::os::raw::c_void,
         userdata_free_callback: syz_UserdataFreeCallback,
     ) -> syz_ErrorCode;
