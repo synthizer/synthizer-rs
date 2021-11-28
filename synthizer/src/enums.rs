@@ -67,6 +67,7 @@ pub enum ObjectType {
     Context = SYZ_OTYPE_CONTEXT as i32,
     Buffer = SYZ_OTYPE_BUFFER as i32,
     BufferGenerator = SYZ_OTYPE_BUFFER_GENERATOR as i32,
+    FastSineBankGenerator = SYZ_OTYPE_FAST_SINE_BANK_GENERATOR as i32,
     StreamingGenerator = SYZ_OTYPE_STREAMING_GENERATOR as i32,
     NoiseGenerator = SYZ_OTYPE_NOISE_GENERATOR as i32,
     DirectSource = SYZ_OTYPE_DIRECT_SOURCE as i32,

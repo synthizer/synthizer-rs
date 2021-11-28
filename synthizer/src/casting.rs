@@ -81,11 +81,13 @@ cast!(
     Generator,
     ObjectType::BufferGenerator,
     ObjectType::StreamingGenerator,
-    ObjectType::NoiseGenerator
+    ObjectType::NoiseGenerator,
+    ObjectType::FastSineBankGenerator
 );
 cast!(BufferGenerator, ObjectType::BufferGenerator);
 cast!(NoiseGenerator, ObjectType::NoiseGenerator);
 cast!(StreamingGenerator, ObjectType::StreamingGenerator);
+cast!(FastSineBankGenerator, ObjectType::FastSineBankGenerator);
 
 cast!(
     Source,
@@ -122,6 +124,7 @@ try_from!(Generator, Handle);
 try_from!(BufferGenerator, Generator, Handle);
 try_from!(NoiseGenerator, Generator, Handle);
 try_from!(StreamingGenerator, Generator, Handle);
+try_from!(FastSineBankGenerator, Generator, Handle);
 
 try_from!(Source, Handle);
 try_from!(DirectSource, Source, Handle);

@@ -28,3 +28,4 @@ impl IsGenerator for Handle {}
 impl IsGenerator for BufferGenerator {}
 impl IsGenerator for NoiseGenerator {}
 impl IsGenerator for StreamingGenerator {}
+impl IsGenerator for FastSineBankGenerator {}
