@@ -1207,6 +1207,169 @@ extern "C" {
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
+pub struct syz_SineBankWave {
+    pub frequency_mul: f64,
+    pub phase: f64,
+    pub gain: f64,
+}
+#[test]
+fn bindgen_test_layout_syz_SineBankWave() {
+    assert_eq!(
+        ::std::mem::size_of::<syz_SineBankWave>(),
+        24usize,
+        concat!("Size of: ", stringify!(syz_SineBankWave))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<syz_SineBankWave>(),
+        8usize,
+        concat!("Alignment of ", stringify!(syz_SineBankWave))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<syz_SineBankWave>())).frequency_mul as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankWave),
+            "::",
+            stringify!(frequency_mul)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<syz_SineBankWave>())).phase as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankWave),
+            "::",
+            stringify!(phase)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<syz_SineBankWave>())).gain as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankWave),
+            "::",
+            stringify!(gain)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct syz_SineBankConfig {
+    pub waves: *const syz_SineBankWave,
+    pub wave_count: ::std::os::raw::c_ulonglong,
+    pub initial_frequency: f64,
+}
+#[test]
+fn bindgen_test_layout_syz_SineBankConfig() {
+    assert_eq!(
+        ::std::mem::size_of::<syz_SineBankConfig>(),
+        24usize,
+        concat!("Size of: ", stringify!(syz_SineBankConfig))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<syz_SineBankConfig>(),
+        8usize,
+        concat!("Alignment of ", stringify!(syz_SineBankConfig))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<syz_SineBankConfig>())).waves as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankConfig),
+            "::",
+            stringify!(waves)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<syz_SineBankConfig>())).wave_count as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankConfig),
+            "::",
+            stringify!(wave_count)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<syz_SineBankConfig>())).initial_frequency as *const _ as usize
+        },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(syz_SineBankConfig),
+            "::",
+            stringify!(initial_frequency)
+        )
+    );
+}
+impl Default for syz_SineBankConfig {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+extern "C" {
+    pub fn syz_initSineBankConfig(cfg: *mut syz_SineBankConfig);
+}
+extern "C" {
+    pub fn syz_createFastSineBankGenerator(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        bank_config: *const syz_SineBankConfig,
+        config: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createFastSineBankGeneratorSine(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        initial_frequency: f64,
+        config: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createFastSineBankGeneratorTriangle(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        initial_frequency: f64,
+        partials: ::std::os::raw::c_uint,
+        config: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createFastSineBankGeneratorSquare(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        initial_frequency: f64,
+        partials: ::std::os::raw::c_uint,
+        config: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
+    pub fn syz_createFastSineBankGeneratorSaw(
+        out: *mut syz_Handle,
+        context: syz_Handle,
+        initial_frequency: f64,
+        partials: ::std::os::raw::c_uint,
+        config: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
+        userdata_free_callback: syz_UserdataFreeCallback,
+    ) -> syz_ErrorCode;
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct syz_RouteConfig {
     pub gain: f64,
     pub fade_time: f64,
