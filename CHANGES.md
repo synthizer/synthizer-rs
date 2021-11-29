@@ -1,4 +1,4 @@
-# 0.4.3 (WIP)
+# 0.4.3 (2021-11-28)
 
 - Upgrade Synthizer to 0.11.6.
 - Bind `FastSineBankGenerator`.
