@@ -1,4 +1,4 @@
-# 0.4.4
+# 0.4.4 (2021-12-11)
 
 - It is now possible to actually set double6 properties.
 
