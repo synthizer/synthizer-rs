@@ -1,3 +1,7 @@
+# 0.4.4
+
+- It is now possible to actually set double6 properties.
+
 # 0.4.3 (2021-11-28)
 
 - Upgrade Synthizer to 0.11.6.

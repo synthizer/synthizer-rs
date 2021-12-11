@@ -169,6 +169,21 @@ impl<'a> Double6Property<'a> {
         })?;
         Ok((o1, o2, o3, o4, o5, o6))
     }
+
+    pub fn set(&self, values: (f64, f64, f64, f64, f64, f64)) -> Result<()> {
+        check_error(unsafe {
+            syz_setD6(
+                self.handle,
+                self.property,
+                values.0,
+                values.1,
+                values.2,
+                values.3,
+                values.4,
+                values.5,
+            )
+        })
+    }
 }
 
 pub struct ObjectProperty<'a> {
