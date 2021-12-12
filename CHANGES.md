@@ -3,6 +3,7 @@
 - Fix `Buffer::from_read_seek` on readers that don't always return the exact
   number of bytes requested.
 - Avoid a heap allocation in `Buffer::from_read_seek`.
+- Loosen the dependency on `asset_lru`'s version.
 
 # 0.4.4 (2021-12-11)
 
