@@ -1,6 +1,6 @@
 [package]
 name = "synthizer"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Austin Hicks <ahicks@ahicks.io>"]
 edition = "2018"
 description = "bindings to Synthizer, a library for 3D audio and effects"

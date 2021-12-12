@@ -1,4 +1,4 @@
-# 0.4.5
+# 0.4.5 (2021-12-12)
 
 - Fix `Buffer::from_read_seek` on readers that don't always return the exact
   number of bytes requested.
