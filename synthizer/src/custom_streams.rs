@@ -53,16 +53,26 @@ pub(crate) extern "C" fn stream_read_cb<T: Read>(
     let data = unsafe { &mut *(userdata as *mut CustomStreamData<T>) };
 
     let dest = unsafe { from_raw_parts_mut(destination as *mut u8, requested as usize) };
-    match data.stream.read(dest) {
-        Ok(d) => {
-            unsafe { *read = d as c_ulonglong };
-            0
-        }
-        Err(e) => {
-            unsafe { *err_msg = data.conv_err(&e) };
-            1
+
+    let mut got_so_far = 0;
+
+    while got_so_far < requested {
+        match data.stream.read(&mut dest[got_so_far as usize..]) {
+            Ok(0) => {
+                break;
+            }
+            Ok(d) => {
+                got_so_far += d as u64;
+            }
+            Err(e) => {
+                unsafe { *err_msg = data.conv_err(&e) };
+                return 1;
+            }
         }
     }
+
+    unsafe { *read = got_so_far as c_ulonglong };
+    0
 }
 
 pub(crate) extern "C" fn stream_seek_cb<T: Seek>(

@@ -1,3 +1,9 @@
+# 0.4.5
+
+- Fix `Buffer::from_read_seek` on readers that don't always return the exact
+  number of bytes requested.
+- Avoid a heap allocation in `Buffer::from_read_seek`.
+
 # 0.4.4 (2021-12-11)
 
 - It is now possible to actually set double6 properties.
