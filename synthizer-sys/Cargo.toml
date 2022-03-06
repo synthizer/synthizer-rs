@@ -10,4 +10,4 @@ license = "Unlicense"
 keywords = ["audio", "gamedev"]
 
 [build-dependencies]
-cmake = "0.1.45"
+cmake = "0.1.48"
