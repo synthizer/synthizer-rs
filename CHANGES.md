@@ -1,3 +1,7 @@
+# 0.4.6 (2022-03-06)
+
+- Upgrade Synthizer to 0.11.7
+
 # 0.4.5 (2021-12-12)
 
 - Fix `Buffer::from_read_seek` on readers that don't always return the exact
