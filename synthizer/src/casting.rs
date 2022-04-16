@@ -110,8 +110,15 @@ macro_rules! try_from {
                 <$t>::cast_from(other.handle_ref())?.ok_or_else(|| crate::errors::Error::rust_error("Type mismatch"))
             }
         }
-    };
 
+
+    impl std::convert::TryFrom<$from> for $t {
+        type Error = crate::errors::Error;
+        fn try_from(other: $from) -> Result<$t> {
+            <$t>::cast_from(other.handle_ref())?.ok_or_else(|| crate::errors::Error::rust_error("Type mismatch"))
+        }
+    }
+    };
     ($t: ty, $t2: ty, $($ts:ty),+) => {
         try_from!($t, $t2);
         try_from!($t, $($ts),*);

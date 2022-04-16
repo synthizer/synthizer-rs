@@ -1,3 +1,7 @@
+# 0.4.7 (WIP)
+
+- Add `TryFrom` for non-references.
+
 # 0.4.6 (2022-03-06)
 
 - Upgrade Synthizer to 0.11.7

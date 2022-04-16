@@ -23,7 +23,13 @@ fn test_casting() -> syz::Result<()> {
     let h: syz::Handle = (&buffer_generator).try_into().expect("TryFrom should work");
 
     let _: syz::BufferGenerator = (&h).try_into().expect("TryFrom should work");
-    let _: syz::Generator = (&h).try_into().expect("TryFrom should work");
+
+    let src3d = syz::Source3D::new(&ctx, syz::PannerStrategy::Hrtf, (0.0, 0.0, 0.0))?;
+    let src = src3d.cast_to::<syz::Source>()?.unwrap();
+
+    // Make sure casting down with try_into works.
+    let _: syz::Source3D = (&src).try_into()?;
+    let _: syz::Source3D = src.try_into()?;
 
     Ok(())
 }
