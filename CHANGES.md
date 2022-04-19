@@ -1,6 +1,6 @@
-# 0.4.7 (WIP)
+# 0.4.7 (2022-04-18)
 
-- Add `TryFrom` for non-references.
+- Add `TryFrom` for non-reference types.
 
 # 0.4.6 (2022-03-06)
 
