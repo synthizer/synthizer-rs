@@ -83,7 +83,7 @@ impl Context {
     enum_p!(
         DistanceModel,
         SYZ_P_DEFAULT_DISTANCE_MODEL,
-        default_distance_modle
+        default_distance_model
     );
     double_p!(SYZ_P_DEFAULT_DISTANCE_REF, default_distance_ref);
     double_p!(SYZ_P_DEFAULT_DISTANCE_MAX, default_distance_max);
