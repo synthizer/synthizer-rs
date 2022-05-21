@@ -1,3 +1,7 @@
+# 0.5.0 (2022-05-21)
+
+- Fix a `modle` typo.
+
 # 0.4.7 (2022-04-18)
 
 - Add `TryFrom` for non-reference types.
