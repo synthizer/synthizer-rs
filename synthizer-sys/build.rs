@@ -1,5 +1,5 @@
 fn main() {
-    if let Ok(_) = std::env::var("DOCS_RS") {
+    if std::env::var("DOCS_RS").is_ok() {
         // Docs don't link.
         return;
     }
@@ -11,11 +11,6 @@ fn main() {
     #[cfg(target_env = "msvc")]
     {
         cfg.cxxflag("/EHsc");
-        // At the moment Rust always links the release version of the MSVC
-        // runtime: https://github.com/rust-lang/rust/issues/39016 This may
-        //
-        // Synthizer isn't able to deal with this at all, so force release.
-        cfg.profile("Release");
         // We need to use Ninja in CI.
         if std::env::var("CI").is_ok() {
             cfg.generator("Ninja");
