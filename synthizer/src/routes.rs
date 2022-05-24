@@ -62,6 +62,7 @@ mod route_traits {
 }
 pub(crate) use route_traits::*;
 
+impl RouteOutput for Source {}
 impl RouteOutput for Handle {}
 impl RouteOutput for DirectSource {}
 impl RouteOutput for AngularPannedSource {}
