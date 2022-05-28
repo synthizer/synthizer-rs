@@ -1,3 +1,7 @@
+# 0.5.1 (WIP)
+
+- Respect static-crt by making the MSVC C++ runtime match the feature (that is, static CRT is also static C++ runtime).
+
 # 0.5.0 (2022-05-21)
 
 - Fix a `modle` typo.
