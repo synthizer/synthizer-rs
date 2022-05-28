@@ -1,6 +1,7 @@
-# 0.5.1 (WIP)
+# 0.5.1 (2022-05-28)
 
 - Respect static-crt by making the MSVC C++ runtime match the feature (that is, static CRT is also static C++ runtime).
+- Allow directly using sources in routing functions.
 
 # 0.5.0 (2022-05-21)
 
@@ -16,8 +17,7 @@
 
 # 0.4.5 (2021-12-12)
 
-- Fix `Buffer::from_read_seek` on readers that don't always return the exact
-  number of bytes requested.
+- Fix `Buffer::from_read_seek` on readers that don't always return the exact number of bytes requested.
 - Avoid a heap allocation in `Buffer::from_read_seek`.
 - Loosen the dependency on `asset_lru`'s version.
 
@@ -33,10 +33,9 @@
 # 0.4.2 (2021-11-07)
 
 - Upgrade Synthizer to 0.11.5.
-- Add a method to build buffers from a read+seek pair without having to go
-  through the entire custom stream infrastructure.
-- Add support for [asset_lru](https://docs.rs/asset_lru) via `AssetLruDecoder`
-  as an optional feature.
+- Add a method to build buffers from a read+seek pair without having to go through the entire custom stream
+  infrastructure.
+- Add support for [asset_lru](https://docs.rs/asset_lru) via `AssetLruDecoder` as an optional feature.
 
 # 0.4.1 (2021-10-24)
 
