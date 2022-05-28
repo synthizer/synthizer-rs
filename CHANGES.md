@@ -1,3 +1,7 @@
+# 0.5.2 (WIP)
+
+- Bind syz_routingRemoveAllRoutes
+
 # 0.5.1 (2022-05-28)
 
 - Respect static-crt by making the MSVC C++ runtime match the feature (that is, static CRT is also static C++ runtime).

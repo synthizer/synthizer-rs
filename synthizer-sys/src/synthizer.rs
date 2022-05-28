@@ -1438,6 +1438,13 @@ extern "C" {
     ) -> syz_ErrorCode;
 }
 extern "C" {
+    pub fn syz_routingRemoveAllRoutes(
+        context: syz_Handle,
+        output: syz_Handle,
+        fade_out: f64,
+    ) -> syz_ErrorCode;
+}
+extern "C" {
     pub fn syz_effectReset(effect: syz_Handle) -> syz_ErrorCode;
 }
 extern "C" {

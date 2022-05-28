@@ -6,7 +6,7 @@ project(synthizer VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # Synthizer version.
-add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=11 SYZ_PATCH=6)
+add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=11 SYZ_PATCH=7)
 
 include(CTest)
 include(CheckCXXSourceRuns)
@@ -191,10 +191,16 @@ endif()
 add_custom_target(data
 python "${CMAKE_SOURCE_DIR}/data_processor/main.py")
 
-macro(example NAME EXT)
+# Not linked to C examples by default. on Linux.
+find_library(MATH_LIBRARY m)
+
+function(example NAME EXT)
   add_executable(${NAME} ./examples/${NAME}.${EXT})
   target_link_libraries(${NAME} synthizer)
-endmacro()
+  if(MATH_LIBRARY)
+    target_link_libraries(${NAME} ${MATH_LIBRARY})
+  endif()
+endfunction()
 
 example(automation_circle cpp)
 example(basic_stream_handle c)

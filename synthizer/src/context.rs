@@ -74,6 +74,12 @@ impl Context {
         })
     }
 
+    pub fn remove_all_routes(&self, output: &dyn RouteOutput, fade_out: f64) -> Result<()> {
+        check_error(unsafe {
+            syz_routingRemoveAllRoutes(self.to_syz_handle(), output.to_syz_handle(), fade_out)
+        })
+    }
+
     double_p!(SYZ_P_GAIN, gain);
     enum_p!(
         PannerStrategy,
