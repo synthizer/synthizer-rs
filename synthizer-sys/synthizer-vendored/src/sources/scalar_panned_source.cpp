@@ -4,7 +4,7 @@
 
 #include "synthizer/c_api.hpp"
 #include "synthizer/context.hpp"
-#include "synthizer/panner_bank.hpp"
+#include "synthizer/panning/panner.hpp"
 
 namespace synthizer {
 
@@ -17,7 +17,7 @@ void ScalarPannedSource::preRun() {
   double scalar;
 
   if (this->acquirePanningScalar(scalar)) {
-    this->panner_lane->setPanningScalar(scalar);
+    this->maybe_panner.value().setPanningScalar(scalar);
   }
 }
 

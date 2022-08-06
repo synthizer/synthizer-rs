@@ -4,7 +4,7 @@
 
 #include "synthizer/c_api.hpp"
 #include "synthizer/context.hpp"
-#include "synthizer/panner_bank.hpp"
+#include "synthizer/panning/panner.hpp"
 
 namespace synthizer {
 
@@ -19,7 +19,7 @@ void AngularPannedSource::preRun() {
   bool angles_changed = this->acquireAzimuth(azimuth) | this->acquireElevation(elevation);
 
   if (angles_changed) {
-    this->panner_lane->setPanningAngles(azimuth, elevation);
+    this->maybe_panner.value().setPanningAngles(azimuth, elevation);
   }
 }
 

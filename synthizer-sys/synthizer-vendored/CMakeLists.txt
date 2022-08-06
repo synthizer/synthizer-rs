@@ -110,11 +110,9 @@ add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/events.cpp
   src/filter_properties.cpp
   src/generator.cpp
-  src/hrtf.cpp
   src/logging.cpp
   src/memory.cpp
   src/noise_generator.cpp
-  src/panner_bank.cpp
   src/pausable.cpp
   src/prime_helpers.cpp
   src/property_internals.cpp
@@ -124,7 +122,6 @@ add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/source.cpp
   src/spatialization_math.cpp
   src/spsc_semaphore.cpp
-  src/stereo_panner.cpp
   src/stream_handle.cpp
   src/version.cpp
 
