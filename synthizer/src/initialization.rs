@@ -44,8 +44,10 @@ pub struct LibraryConfig {
     libsndfile_path_string: Option<std::ffi::CString>,
 }
 
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(i32)]
 pub enum LogLevel {
+    #[default]
     Error = SYZ_LOG_LEVEL_ERROR as i32,
     Warn = SYZ_LOG_LEVEL_WARN as i32,
     Info = SYZ_LOG_LEVEL_INFO as i32,
