@@ -2,6 +2,9 @@
 
 #include "synthizer_constants.h"
 
+#include "synthizer/error.hpp"
+#include "synthizer/math.hpp"
+
 #include <array>
 #include <cmath>
 
@@ -68,35 +71,49 @@ template <typename T> void setPropertiesFromDistanceParams(T *dest, const Distan
   dest->setDistanceModel((int)params.distance_model);
 }
 
-double mulFromDistanceParams(const DistanceParams &params);
+inline double mulFromDistanceParams(const DistanceParams &params) {
+  double dist_mul = 1.0;
 
-/*
- * Helper class which can be used to augment anything with a distance model, with Synthizer-compatible property
- * getter/setter pairs.
- *
- * How this works is you inherit from it somewhere in the hierarchy, then define properties as usual
- * */
-class DistanceParamsMixin {
-public:
-  DistanceParams &getDistanceParams();
-  void setDistanceParams(const DistanceParams &params);
+  switch (params.distance_model) {
+  case SYZ_DISTANCE_MODEL_NONE:
+    dist_mul = 1.0;
+    break;
+  case SYZ_DISTANCE_MODEL_LINEAR:
+    dist_mul = 1 - params.rolloff *
+                       (clamp(params.distance, params.distance_ref, params.distance_max) - params.distance_ref) /
+                       (params.distance_max - params.distance_ref);
+    break;
+  case SYZ_DISTANCE_MODEL_EXPONENTIAL:
+    if (params.distance_ref == 0.0) {
+      dist_mul = 0.0;
+    } else {
+      dist_mul = std::pow(std::max(params.distance, params.distance_ref) / params.distance_ref, -params.rolloff);
+    }
+    break;
+  case SYZ_DISTANCE_MODEL_INVERSE:
+    if (params.distance_ref == 0.0) {
+      dist_mul = 0.0;
+    } else {
+      dist_mul =
+          params.distance_ref /
+          (params.distance_ref + params.rolloff * std::max(params.distance, params.distance_ref) - params.distance_ref);
+    }
+    break;
+  default:
+    dist_mul = 1.0;
+  }
 
-  double getDistanceRef();
-  void setDistanceRef(double val);
-  double getDistanceMax();
-  void setDistanceMax(double val);
-  double getRolloff();
-  void setRolloff(double val);
-  double getClosenessBoost();
-  void setClosenessBoost(double val);
-  double getClosenessBoostDistance();
-  void setClosenessBoostDistance(double val);
-  int getDistanceModel();
-  void setDistanceModel(int val);
+  /*
+   * If the distance is further away than closeness_boost, we reduce.
+   *
+   * This is counterintuitive, but makes sure that distances  closer than closeness_boost don't break attenuation.
+   * */
+  if (params.distance > params.closeness_boost_distance) {
+    dist_mul *= dbToGain(-params.closeness_boost);
+  }
 
-private:
-  DistanceParams distance_params{};
-};
+  return clamp(dist_mul, 0.0, 1.0);
+}
 
 typedef std::array<double, 3> Vec3d;
 
@@ -119,6 +136,10 @@ inline Vec3d normalize(const Vec3d &x) {
   return {x[0] / m, x[1] / m, x[2] / m};
 }
 
-void throwIfParallel(const Vec3d &a, const Vec3d &b);
+inline void throwIfParallel(const Vec3d &a, const Vec3d &b) {
+  double dp = dotProduct(a, b);
+  if (dp > 0.95)
+    throw EInvariant("Vectors must not be parallel");
+}
 
 } // namespace synthizer

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(synthizer VERSION 0.1.0 LANGUAGES C CXX)
 
+OPTION(SYZ_INTEGRATING "Set to ON to avoid linking examples etc. when integrating into a language's bindings" OFF)
+
 # Do this first; some things will quietly pick it up and it's
 # really hard to tell which.
 set(CMAKE_CXX_STANDARD 17)
@@ -94,15 +96,13 @@ set_property(TARGET synthizer_single_file_libs PROPERTY POSITION_INDEPENDENT_COD
 set(SYNTHIZER_LIB_TYPE STATIC CACHE STRING "The build type for Synthizer. Either STATIC or SHARED")
 add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/audio_output.cpp
-  src/automation_batch.cpp
   src/background_thread.cpp
   src/base_object.cpp
-  src/biquad.cpp
   src/block_buffer_cache.cpp
-  src/buffer.cpp
+  src/c_api/buffer.cpp
   src/byte_stream.cpp
-  src/c_api.cpp
-  src/channel_mixing.cpp
+  src/c_api/core.cpp
+  src/c_api/generators.cpp
   src/context.cpp
   src/decoding.cpp
   src/error.cpp
@@ -112,19 +112,14 @@ add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/generator.cpp
   src/logging.cpp
   src/memory.cpp
-  src/noise_generator.cpp
   src/pausable.cpp
-  src/prime_helpers.cpp
   src/property_internals.cpp
   src/routable.cpp
   src/router.cpp
   src/shared_object.cpp
   src/source.cpp
-  src/spatialization_math.cpp
   src/spsc_semaphore.cpp
   src/stream_handle.cpp
-  src/version.cpp
-
   src/data/arrays.cpp
   src/data/hrtf.cpp
 
@@ -137,15 +132,6 @@ add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/effects/echo.cpp
   src/effects/effects.cpp
   src/effects/fdn_reverb.cpp
-
-  src/filters/audio_eq_cookbook.cpp
-  src/filters/simple_filters.cpp
-
-  src/generators/buffer.cpp
-  src/generators/fast_sine_bank.cpp
-  src/generators/noise.cpp
-  src/generators/streaming.cpp
-
   src/sources/angular_panned_source.cpp
   src/sources/direct_source.cpp
   src/sources/panned_source.cpp
@@ -180,6 +166,11 @@ endif()
 
 set_property(TARGET synthizer PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  # Don't let MSVC define min and max from windows.h.
+  target_compile_definitions(synthizer PRIVATE NOMINMAX)
+endif()
+
 # For CI artifacts:
 if(DEFINED CI_SYNTHIZER_NAME)
   set_target_properties(synthizer PROPERTIES OUTPUT_NAME ${CI_SYNTHIZER_NAME})
@@ -192,10 +183,12 @@ python "${CMAKE_SOURCE_DIR}/data_processor/main.py")
 find_library(MATH_LIBRARY m)
 
 function(example NAME EXT)
-  add_executable(${NAME} ./examples/${NAME}.${EXT})
-  target_link_libraries(${NAME} synthizer)
-  if(MATH_LIBRARY)
-    target_link_libraries(${NAME} ${MATH_LIBRARY})
+  if (NOT "${SYZ_INTEGRATING}")
+    add_executable(${NAME} ./examples/${NAME}.${EXT})
+    target_link_libraries(${NAME} synthizer)
+    if(MATH_LIBRARY)
+      target_link_libraries(${NAME} ${MATH_LIBRARY})
+    endif()
   endif()
 endfunction()
 
@@ -214,7 +207,7 @@ example(simple_automation c)
 
 # The following won't work on Windows unless compiled against a static build of Synthizer because we don't want to expose the C++ internals from the DLL.
 # Since these are just test programs and not actual utilities, disable them on all platforms if the build isn't static.
-if("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC")
+if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
   add_executable(delay_line_test test/delay_line.cpp)
   target_link_libraries(delay_line_test synthizer)
   add_test(NAME delay_line COMMAND delay_line_test)
