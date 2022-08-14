@@ -1,28 +1,42 @@
-#include "synthizer.h"
+#pragma once
+
 #include "synthizer_constants.h"
 
-#include "synthizer/c_api.hpp"
 #include "synthizer/context.hpp"
-#include "synthizer/logging.hpp"
-#include "synthizer/math.hpp"
-#include "synthizer/sources.hpp"
-#include "synthizer/spatialization_math.hpp"
+#include "synthizer/property_internals.hpp"
+#include "synthizer/sources/angular_panned_source.hpp"
 
-#include <cmath>
+#include <memory>
 
 namespace synthizer {
+class Context;
 
-Source3D::Source3D(std::shared_ptr<Context> context, int _panner_strategy)
+class Source3D : public AngularPannedSource {
+public:
+  Source3D(std::shared_ptr<Context> context, int panner_strategy);
+  void initInAudioThread() override;
+
+  int getObjectType() override;
+  void preRun() override;
+  // No run: PannedSource already handles that for us.
+
+#define PROPERTY_CLASS Source3D
+#define PROPERTY_BASE PannedSource
+#define PROPERTY_LIST SOURCE3D_PROPERTIES
+#include "synthizer/property_impl.hpp"
+};
+
+inline Source3D::Source3D(std::shared_ptr<Context> context, int _panner_strategy)
     : AngularPannedSource(context, _panner_strategy) {}
 
-void Source3D::initInAudioThread() {
+inline void Source3D::initInAudioThread() {
   PannedSource::initInAudioThread();
   setPropertiesFromDistanceParams(this, this->getContext()->getDefaultDistanceParams());
 }
 
-int Source3D::getObjectType() { return SYZ_OTYPE_SOURCE_3D; }
+inline int Source3D::getObjectType() { return SYZ_OTYPE_SOURCE_3D; }
 
-void Source3D::preRun() {
+inline void Source3D::preRun() {
   auto ctx = this->getContext();
   auto listener_pos = ctx->getPosition();
   auto listener_orient = ctx->getOrientation();
@@ -69,27 +83,3 @@ void Source3D::preRun() {
 }
 
 } // namespace synthizer
-
-using namespace synthizer;
-
-SYZ_CAPI syz_ErrorCode syz_createSource3D(syz_Handle *out, syz_Handle context, int panner_strategy, double x, double y,
-                                          double z, void *config, void *userdata,
-                                          syz_UserdataFreeCallback *userdata_free_callback) {
-  SYZ_PROLOGUE(void) config;
-
-  if (panner_strategy >= SYZ_PANNER_STRATEGY_COUNT) {
-    throw ERange("Invalid panner strategy");
-  }
-
-  auto ctx = fromC<Context>(context);
-  auto ret = ctx->createObject<Source3D>(panner_strategy);
-  std::shared_ptr<Source> src_ptr = ret;
-  ctx->registerSource(src_ptr);
-  *out = toC(ret);
-
-  auto e = syz_setD3(*out, SYZ_P_POSITION, x, y, z);
-  (void)e;
-  assert(e == 0);
-  return syz_handleSetUserdata(*out, userdata, userdata_free_callback);
-  SYZ_EPILOGUE
-}

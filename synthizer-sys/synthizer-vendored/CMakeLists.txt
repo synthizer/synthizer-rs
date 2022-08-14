@@ -96,19 +96,15 @@ set_property(TARGET synthizer_single_file_libs PROPERTY POSITION_INDEPENDENT_COD
 set(SYNTHIZER_LIB_TYPE STATIC CACHE STRING "The build type for Synthizer. Either STATIC or SHARED")
 add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/audio_output.cpp
-  src/background_thread.cpp
   src/base_object.cpp
-  src/block_buffer_cache.cpp
-  src/c_api/buffer.cpp
   src/byte_stream.cpp
-  src/c_api/core.cpp
-  src/c_api/generators.cpp
+  # includes our C API source files into a unity build.
+  src/c_api/unity.cpp
   src/context.cpp
   src/decoding.cpp
   src/error.cpp
   src/event_timeline.cpp
   src/events.cpp
-  src/filter_properties.cpp
   src/generator.cpp
   src/logging.cpp
   src/memory.cpp
@@ -117,27 +113,8 @@ add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/routable.cpp
   src/router.cpp
   src/shared_object.cpp
-  src/source.cpp
-  src/spsc_semaphore.cpp
-  src/stream_handle.cpp
   src/data/arrays.cpp
   src/data/hrtf.cpp
-
-  src/decoders/flac.cpp
-  src/decoders/libsndfile.cpp
-  src/decoders/mp3.cpp
-  src/decoders/raw_decoder.cpp
-  src/decoders/wav.cpp
-
-  src/effects/echo.cpp
-  src/effects/effects.cpp
-  src/effects/fdn_reverb.cpp
-  src/sources/angular_panned_source.cpp
-  src/sources/direct_source.cpp
-  src/sources/panned_source.cpp
-  src/sources/scalar_panned_source.cpp
-  src/sources/source3d.cpp
-
   src/streams/custom_stream.cpp
   src/streams/file.cpp
   src/streams/memory_stream.cpp
@@ -166,7 +143,7 @@ endif()
 
 set_property(TARGET synthizer PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if (WIN32)
   # Don't let MSVC define min and max from windows.h.
   target_compile_definitions(synthizer PRIVATE NOMINMAX)
 endif()

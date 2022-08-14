@@ -1,20 +1,25 @@
-#include "synthizer.h"
+#pragma once
 
-#include "synthizer/sources.hpp"
+#include "synthizer_constants.h"
 
+#include "synthizer/base_object.hpp"
 #include "synthizer/biquad.hpp"
 #include "synthizer/block_buffer_cache.hpp"
-#include "synthizer/c_api.hpp"
 #include "synthizer/channel_mixing.hpp"
 #include "synthizer/config.hpp"
 #include "synthizer/context.hpp"
 #include "synthizer/fade_driver.hpp"
+#include "synthizer/faders.hpp"
 #include "synthizer/generator.hpp"
-#include "synthizer/math.hpp"
+#include "synthizer/memory.hpp"
+#include "synthizer/panning/panner.hpp"
+#include "synthizer/pausable.hpp"
+#include "synthizer/property_internals.hpp"
+#include "synthizer/routable.hpp"
+#include "synthizer/spatialization_math.hpp"
 #include "synthizer/types.hpp"
 #include "synthizer/vector_helpers.hpp"
 
-#include <algorithm>
 #include <array>
 #include <memory>
 #include <optional>
@@ -22,13 +27,88 @@
 
 namespace synthizer {
 
-void Source::addGenerator(std::shared_ptr<Generator> &generator) {
+/* Implementation of a variety of sources. */
+
+class BiquadFilter;
+class Context;
+
+class Source : public RouteOutput, public Pausable {
+public:
+  Source(std::shared_ptr<Context> ctx) : RouteOutput(ctx) { this->setGain(1.0); }
+
+  virtual ~Source() {}
+
+  virtual void tickAutomation() override;
+
+  /*
+   * called before running, to give subclasses a chance to set gain_3d.
+   *
+   * Called in fillBlock since this base class doesn't have a run.
+   * */
+  virtual void preRun() {}
+
+  /* Set the 3d gain, an additional gain aplied on top of the gain property. */
+  void setGain3D(double gain);
+
+  /* Should write to appropriate places in the context on its own. */
+  virtual void run(unsigned int out_channels, float *out) = 0;
+
+  /* Weak add and/or remove a generator from this source. */
+  virtual void addGenerator(std::shared_ptr<Generator> &gen);
+  virtual void removeGenerator(std::shared_ptr<Generator> &gen);
+  bool hasGenerator(std::shared_ptr<Generator> &generator);
+
+  bool wantsLinger() override;
+  std::optional<double> startLingering(const std::shared_ptr<CExposable> &reference,
+                                       double configured_timeout) override;
+
+#define PROPERTY_CLASS Source
+#define PROPERTY_BASE BaseObject
+#define PROPERTY_LIST SOURCE_PROPERTIES
+#include "synthizer/property_impl.hpp"
+
+protected:
+  /*
+   * An internal buffer, which accumulates all generators.
+   * */
+  std::array<float, config::BLOCK_SIZE * config::MAX_CHANNELS> block;
+
+  /*
+   * Fill the internal block, downmixing and/or upmixing generators
+   * to the specified channel count.
+   *
+   * Also pumps the router, which will feed effects. We do this here so that all source types just work for free.
+   * */
+  void fillBlock(unsigned int channels);
+
+private:
+  deferred_vector<GeneratorRef> generators;
+  FadeDriver gain_fader = {1.0f, 1};
+  /* Used to detect channel changes in fillBlock. */
+  unsigned int last_channels = 0;
+  std::shared_ptr<BiquadFilter> filter = nullptr, filter_direct = nullptr, filter_effects = nullptr;
+  bool is_lingering = false;
+  /**
+   * A countdown for lingering. Decremented for every block after there are no generators. When it hits zero,
+   * the source enqueues itself for death.
+   *
+   * This exists because some source/panner types need a few blocks of audio to finish fading out, as do the
+   * filters. Without it, sources can click on death.
+   * */
+  unsigned int linger_countdown = 3;
+
+  /* gains used by 3D sources, applied to the block on top of whatever the user set. */
+  double gain_3d = 1.0;
+  bool gain_3d_changed = false;
+};
+
+inline void Source::addGenerator(std::shared_ptr<Generator> &generator) {
   if (this->hasGenerator(generator))
     return;
   this->generators.emplace_back(generator);
 }
 
-void Source::removeGenerator(std::shared_ptr<Generator> &generator) {
+inline void Source::removeGenerator(std::shared_ptr<Generator> &generator) {
   if (this->generators.empty())
     return;
   if (this->hasGenerator(generator) == false)
@@ -45,11 +125,11 @@ void Source::removeGenerator(std::shared_ptr<Generator> &generator) {
   this->generators.resize(this->generators.size() - 1);
 }
 
-bool Source::hasGenerator(std::shared_ptr<Generator> &generator) {
+inline bool Source::hasGenerator(std::shared_ptr<Generator> &generator) {
   return weak_vector::contains(this->generators, generator);
 }
 
-void Source::tickAutomation() {
+inline void Source::tickAutomation() {
   if (this->isPaused()) {
     return;
   }
@@ -59,12 +139,12 @@ void Source::tickAutomation() {
   weak_vector::iterate_removing(this->generators, [](auto &g) { g->tickAutomation(); });
 }
 
-void Source::setGain3D(double gain) {
+inline void Source::setGain3D(double gain) {
   this->gain_3d = gain;
   this->gain_3d_changed = true;
 }
 
-void Source::fillBlock(unsigned int channels) {
+inline void Source::fillBlock(unsigned int channels) {
   this->preRun();
 
   auto premix_guard = acquireBlockBuffer();
@@ -162,9 +242,10 @@ void Source::fillBlock(unsigned int channels) {
   }
 }
 
-bool Source::wantsLinger() { return true; }
+inline bool Source::wantsLinger() { return true; }
 
-std::optional<double> Source::startLingering(const std::shared_ptr<CExposable> &reference, double configured_timeout) {
+inline std::optional<double> Source::startLingering(const std::shared_ptr<CExposable> &reference,
+                                                    double configured_timeout) {
   CExposable::startLingering(reference, configured_timeout);
 
   this->is_lingering = true;
@@ -175,25 +256,3 @@ std::optional<double> Source::startLingering(const std::shared_ptr<CExposable> &
 }
 
 } // namespace synthizer
-
-using namespace synthizer;
-
-SYZ_CAPI syz_ErrorCode syz_sourceAddGenerator(syz_Handle source, syz_Handle generator) {
-  SYZ_PROLOGUE
-  auto src = fromC<Source>(source);
-  auto gen = fromC<Generator>(generator);
-  src->getContextRaw()->enqueueReferencingCallbackCommand(
-      true, [](auto &src, auto &gen) { src->addGenerator(gen); }, src, gen);
-  return 0;
-  SYZ_EPILOGUE
-}
-
-SYZ_CAPI syz_ErrorCode syz_sourceRemoveGenerator(syz_Handle source, syz_Handle generator) {
-  SYZ_PROLOGUE
-  auto src = fromC<Source>(source);
-  auto gen = fromC<Generator>(generator);
-  src->getContextRaw()->enqueueReferencingCallbackCommand(
-      true, [](auto &src, auto &gen) { src->removeGenerator(gen); }, src, gen);
-  return 0;
-  SYZ_EPILOGUE
-}
