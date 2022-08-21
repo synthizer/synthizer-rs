@@ -33,9 +33,16 @@ public:
 
 private:
   template <bool L> void readInterpolated(double pos, float *out, float gain);
+
   /* Adds to destination, per the generators API. */
   void generateNoPitchBend(float *out, FadeDriver *gain_driver);
+
+  /**
+   * In the common case we know that we can get from the buffer in one read. This covers that case.
+   * */
+  void generateByCopying(float *out, FadeDriver *gain_driver);
   template <bool L> void generatePitchBendHelper(float *out, FadeDriver *gain_driver, double pitch_bend);
+
   void generatePitchBend(float *out, FadeDriver *gain_driver, double pitch_bend);
 
   /*
@@ -156,26 +163,55 @@ inline void BufferGenerator::generatePitchBend(float *output, FadeDriver *gd, do
   }
 }
 
-inline void BufferGenerator::generateNoPitchBend(float *output, FadeDriver *gd) {
-  auto workspace_guard = acquireBlockBuffer();
-  float *workspace = workspace_guard;
+inline void BufferGenerator::generateByCopying(float *output, FadeDriver *gd) {
   std::size_t pos = std::round(this->position_in_samples);
+
+  // the compiler is not smart enough to tell that the value of getChannels never changes, so we need to pull it to a
+  // variable.
+  unsigned int channels = this->getChannels();
+
+  gd->drive(this->getContextRaw()->getBlockTime(), [&](auto &gain_cb) {
+    const std::int16_t *raw = this->reader.getRawSlice(pos * channels, (pos + config::BLOCK_SIZE) * channels);
+
+    for (unsigned int i = 0; i < config::BLOCK_SIZE * channels; i++) {
+      output[i] += raw[i] * (1.0f / 32768.0f) * gain_cb(i / channels);
+    }
+  });
+
+  this->position_in_samples = pos + config::BLOCK_SIZE;
+}
+
+inline void BufferGenerator::generateNoPitchBend(float *output, FadeDriver *gd) {
+  std::size_t pos = std::round(this->position_in_samples);
+
+  // We can sometimes delegate to the generateByCopy optimized path.  Do so when we aren't going to hit the end.  We
+  // could move the end event handling there and fully optimize buffers which are exactly the block size, but that's not
+  // worth the complexity for now.
+  if (pos + config::BLOCK_SIZE + 1 < this->reader.getLength() / this->reader.getChannels()) {
+    return this->generateByCopying(output, gd);
+  }
+
   float *cursor = output;
   unsigned int remaining = config::BLOCK_SIZE;
+  auto workspace_guard = acquireBlockBuffer(false);
+  float *workspace = workspace_guard;
   bool looping = this->getLooping() != 0;
   unsigned int i = 0;
+
+  // the compiler is bad about telling that the channel count never changes, so lift it to a variable.
+  unsigned int channels = this->getChannels();
 
   gd->drive(this->getContextRaw()->getBlockTime(), [&](auto &gain_cb) {
     while (remaining) {
       auto got = this->reader.readFrames(pos, remaining, workspace);
       for (unsigned int j = 0; j < got; i++, j++) {
         float g = gain_cb(i);
-        for (unsigned int ch = 0; ch < this->reader.getChannels(); ch++) {
-          cursor[j * this->reader.getChannels() + ch] += g * workspace[j * this->reader.getChannels() + ch];
+        for (unsigned int ch = 0; ch < channels; ch++) {
+          cursor[j * channels + ch] += g * workspace[j * channels + ch];
         }
       }
       remaining -= got;
-      cursor += got * this->reader.getChannels();
+      cursor += got * channels;
       pos += got;
       if (remaining > 0) {
         if (looping == false) {

@@ -3,6 +3,8 @@ project(synthizer VERSION 0.1.0 LANGUAGES C CXX)
 
 OPTION(SYZ_INTEGRATING "Set to ON to avoid linking examples etc. when integrating into a language's bindings" OFF)
 
+include(FetchContent)
+
 # Do this first; some things will quietly pick it up and it's
 # really hard to tell which.
 set(CMAKE_CXX_STANDARD 17)
@@ -77,6 +79,7 @@ include(cmake/wdl.txt)
 
 include_directories(SYSTEM
   include
+  third_party/boost_partial
   third_party/miniaudio
   third_party/dr_libs
   third_party/stb
@@ -185,57 +188,74 @@ example(simple_automation c)
 # The following won't work on Windows unless compiled against a static build of Synthizer because we don't want to expose the C++ internals from the DLL.
 # Since these are just test programs and not actual utilities, disable them on all platforms if the build isn't static.
 if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
-  add_executable(delay_line_test test/delay_line.cpp)
-  target_link_libraries(delay_line_test synthizer)
-  add_test(NAME delay_line COMMAND delay_line_test)
-
   add_executable(file_test file_test.cpp)
   target_link_libraries(file_test synthizer)
 
-  add_executable(test_filter_repl test/filter_repl.cpp)
+  add_executable(test_filter_repl test/interactive/filter_repl.cpp)
   target_link_libraries(test_filter_repl synthizer)
-
-  add_executable(property_write_bench benchmarks/property_write.cpp)
-  target_link_libraries(property_write_bench synthizer)
 
   add_executable(decoding_bench benchmarks/decoding.cpp)
   target_link_libraries(decoding_bench synthizer)
 
-  add_executable(test_random_float test/random_float.cpp)
-  target_link_libraries(test_random_float synthizer)
-
-  add_executable(test_noise test/noise.cpp)
+  add_executable(test_noise test/interactive/noise.cpp)
   target_link_libraries(test_noise synthizer)
 
-  add_executable(test_latch test/latch.cpp)
-  target_link_libraries(test_latch synthizer)
-  add_test(NAME latch COMMAND test_latch)
-
-  add_executable(test_verify_properties test/verify_properties.cpp)
-  target_link_libraries(test_verify_properties synthizer)
-  add_test(NAME verify_properties COMMAND test_verify_properties)
-
-  # can't be an actual unit test until we have silent contexts.
-  add_executable(test_effect_connection test/effect_connection.cpp)
-  target_link_libraries(test_effect_connection synthizer)
-
-  add_executable(test_generation_thread test/generation_thread.cpp)
-  target_link_libraries(test_generation_thread synthizer)
-  add_test(NAME generation_thread COMMAND test_generation_thread)
-
-  add_executable(test_double_refcount test/double_refcount.c)
-  target_link_libraries(test_double_refcount synthizer)
-  add_test(NAME double_refcount COMMAND test_double_refcount)
-
-  add_executable(test_property_automation_timeline test/property_automation_timeline.cpp)
-  target_link_libraries(test_property_automation_timeline synthizer)
-  add_test(NAME property_automation_timeline COMMAND test_property_automation_timeline)
-
-  add_executable(test_seeking test/seeking.cpp)
+  add_executable(test_seeking test/interactive/seeking.cpp)
   target_link_libraries(test_seeking synthizer)
 
-  add_executable(test_fast_sine_accuracy test/fast_sine_accuracy.cpp)
+  add_executable(test_fast_sine_accuracy test/interactive/fast_sine_accuracy.cpp)
   target_link_libraries(test_fast_sine_accuracy synthizer)
+
+  # Set up benchmarks for things we can benchmark.
+  #
+  # Unfortunately Synthizer's state is too global for us to do this reliably until we pull the math out to a library,
+  # but we can at least group some things under Google's benchmarking library which is better than nothing.
+
+  # Apparently we have to do this globally because CMake won't let us set a define for a subdirectory. Without it
+  # google/benchmark wants gtest.
+  set(BENCHMARK_ENABLE_TESTING OFF)
+
+  FetchContent_Declare(benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark
+    GIT_TAG 37be1e8252527229cccad9f097afe68572f3c08a
+  )
+
+  FetchContent_MakeAvailable(benchmark)
+
+  add_executable(gbench
+    benchmarks/gbench/block_buffer_cache.cpp
+    benchmarks/gbench/hrtf.cpp
+    benchmarks/gbench/main.cpp
+    benchmarks/gbench/property_write.cpp
+    benchmarks/gbench/standard_setup.cpp
+  )
+  target_link_libraries(gbench synthizer benchmark::benchmark)
+  set_property(TARGET gbench PROPERTY CXX_STANDARD 17)
+
+  FetchContent_Declare(catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2
+    GIT_TAG v3.1.0
+  )
+  FetchContent_MakeAvailable(benchmark catch2)
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+  INCLUDE(Catch)
+
+  add_executable(tests
+    test/block_delay_line.cpp
+    test/delay_line.cpp
+    test/double_refcount.cpp
+    test/effect_connection.cpp
+    test/generation_thread.cpp
+    test/latch.cpp
+    test/main.cpp
+    test/mod_pointer.cpp
+    test/property_automation_timeline.cpp
+    test/random_float.cpp
+    test/verify_properties.cpp
+  )
+  target_link_libraries(tests PRIVATE Catch2::Catch2 synthizer)
+  catch_discover_tests(tests)
+
 endif()
 
 install(

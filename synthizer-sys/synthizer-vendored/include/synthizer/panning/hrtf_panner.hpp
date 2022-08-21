@@ -1,16 +1,24 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <cstddef>
-#include <tuple>
-
 #include "synthizer/block_delay_line.hpp"
 #include "synthizer/config.hpp"
 #include "synthizer/data/hrtf.hpp"
 #include "synthizer/math.hpp"
 #include "synthizer/types.hpp"
+#include "synthizer/vbool.hpp"
+
+#include <boost/predef.h>
+
+#if BOOST_HW_SIMD_X86 > 0
+#include <emmintrin.h>
+#endif
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <numeric>
+#include <tuple>
 
 namespace synthizer {
 
@@ -54,8 +62,7 @@ std::tuple<double, double> computeInterauralTimeDifference(double azimuth, doubl
 /*
  * Read the built-in HRIR dataset, interpolate as necessary, and fill the output buffers with impulses for convolution.
  * */
-void computeHrtfImpulses(double azimuth, double elevation, float *left, unsigned int left_stride, float *right,
-                         unsigned int right_stride);
+void computeHrtfImpulses(double azimuth, double elevation, float *left, float *right);
 
 /*
  * An HRTF convolver with ITD>
@@ -71,30 +78,28 @@ public:
   void setPanningScalar(double scalar);
 
 private:
-  template <typename R> void stepConvolution(R &&reader, const float *hrir, float *out_l, float *out_r);
-
   /*
-   * 2 blocks plus the max ITD.
-   * We'll use modulus on 1/3 blocks on average.
+   * Must be at least 1 block, and at least hrtf::IMPULSE_LENGTH. But we want longer; longer requires less modulus.
    * */
-  BlockDelayLine<1,
-                 nextMultipleOf(config::HRTF_MAX_ITD + config::BLOCK_SIZE * 2, config::BLOCK_SIZE) / config::BLOCK_SIZE>
-      input_line;
+  BlockDelayLine<1, nextPowerOfTwo(config::HRTF_MAX_ITD + config::BLOCK_SIZE * 10) / config::BLOCK_SIZE> input_line;
 
   /* This is an extra sample long to make linear interpolation easier. */
-  BlockDelayLine<2, nextMultipleOf(config::BLOCK_SIZE * 2 + config::HRTF_MAX_ITD + 1, config::BLOCK_SIZE) /
-                        config::BLOCK_SIZE>
-      itd_line;
+  BlockDelayLine<1, nextPowerOfTwo(config::BLOCK_SIZE * 10 + config::HRTF_MAX_ITD + 1) / config::BLOCK_SIZE>
+      itd_line_left, itd_line_right;
 
   /*
    * The hrirs and an index which determines which we are using.
    *
-   * The way this works is that current_hrir is easily flipped with xor. current_hrir ^ 1 is the previous, (current_hrir
-   * ^ 1)*2*data::hrtf::RESPONSE_LENGTH is the index of the previous.
+   * The way this works is that current_hrir is easily flipped with ^, so each array holds two arrays of the hrir for
+   * that ear.
+   *
+   * These impulses are stored in reversed order, which lets us go "forward" both in the delay line and the impulse
+   * array.  This greatly helps vectorization and SIMD.
    * */
-  std::array<float, data::hrtf::IMPULSE_LENGTH * 2 * 2> hrirs = {0.0f};
+  std::array<std::array<float, data::hrtf::IMPULSE_LENGTH>, 2> impulse_l, impulse_r;
+
   unsigned int current_hrir = 0;
-  double prev_itd_l = 0.0, prev_itd_r = 0.0;
+  float prev_itd_l = 0.0, prev_itd_r = 0.0;
 
   double azimuth = 0.0;
   double elevation = 0.0;
@@ -176,8 +181,7 @@ inline std::tuple<double, double> linearInterpolate(double val, double start, do
 
 inline void computeHrtfImpulseSingleChannel(double azimuth, double elevation,
                                             const data::hrtf::ElevationDef *elev_lower,
-                                            const data::hrtf::ElevationDef *elev_upper, float *out,
-                                            unsigned int out_stride) {
+                                            const data::hrtf::ElevationDef *elev_upper, float *out) {
   std::array<double, 4> weights = {0.0};
   std::array<const float *, 4> impulses = {nullptr};
   unsigned int weight_count = 0;
@@ -229,19 +233,18 @@ inline void computeHrtfImpulseSingleChannel(double azimuth, double elevation,
   }
 
   for (unsigned int i = 0; i < data::hrtf::IMPULSE_LENGTH; i++) {
-    out[i * out_stride] = impulses[0][i] * weights[0];
+    out[i] = impulses[0][i] * weights[0];
   }
 
   for (unsigned int c = 1; c < weight_count; c++) {
-    float *cursor = out;
-    for (unsigned int i = 0; i < data::hrtf::IMPULSE_LENGTH; i++, cursor += out_stride) {
-      *cursor += impulses[c][i] * weights[c];
+
+    for (unsigned int i = 0; i < data::hrtf::IMPULSE_LENGTH; i++) {
+      out[i] += impulses[c][i] * weights[c];
     }
   }
 }
 
-inline void computeHrtfImpulses(double azimuth, double elevation, float *left, unsigned int left_stride, float *right,
-                                unsigned int right_stride) {
+inline void computeHrtfImpulses(double azimuth, double elevation, float *left, float *right) {
   const data::hrtf::ElevationDef *elev_lower = nullptr, *elev_upper = nullptr;
 
   assert(azimuth >= 0.0 && azimuth <= 360.0);
@@ -269,119 +272,237 @@ inline void computeHrtfImpulses(double azimuth, double elevation, float *left, u
    * */
   elevation = clamp(elevation, elev_lower->angle, elev_upper->angle);
 
-  computeHrtfImpulseSingleChannel(azimuth, elevation, elev_lower, elev_upper, left, left_stride);
-  computeHrtfImpulseSingleChannel(360 - azimuth, elevation, elev_lower, elev_upper, right, right_stride);
+  computeHrtfImpulseSingleChannel(azimuth, elevation, elev_lower, elev_upper, left);
+  computeHrtfImpulseSingleChannel(360 - azimuth, elevation, elev_lower, elev_upper, right);
 }
 
 inline unsigned int HrtfPanner::getOutputChannelCount() { return 2; }
 
 inline float *HrtfPanner::getInputBuffer() { return this->input_line.getNextBlock(); }
 
-template <typename R>
-inline void HrtfPanner::stepConvolution(R &&reader, const float *hrir, float *dest_l, float *dest_r) {
-  float accumulator_left = 0.0f;
-  float accumulator_right = 0.0f;
-  for (unsigned int j = 0; j < data::hrtf::IMPULSE_LENGTH; j++) {
-    auto tmp = reader.readFrame(j);
-    float hrir_left = hrir[j * 2];
-    float hrir_right = hrir[j * 2 + 1];
+namespace hrtf_panner_detail {
+template <typename MP>
+FLATTENED void stepConvolution(MP ptr, const float *hrir_left, const float *hrir_right, float *dest_l, float *dest_r) {
+  static_assert(data::hrtf::IMPULSE_LENGTH > 8);
+  static_assert(data::hrtf::IMPULSE_LENGTH % 8 == 0);
 
-    accumulator_left += *tmp * hrir_left;
-    accumulator_right += *tmp * hrir_right;
+  // The following horrible code was arrived at through benchmarking because MSVC flat out refuses to recognize any of
+  // this as vectorizable.  We'll continue this effort in the future with overloads using the fact that ModPointer is
+  // sometimes a pointer, but for now we take what we can get.
+
+  float redl0 = 0.0f, redl1 = 0.0f, redl2 = 0.0f, redl3 = 0.0f;
+  float redr0 = 0.0f, redr1 = 0.0f, redr2 = 0.0f, redr3 = 0.0f;
+
+  // We store the impulses reversed so we can go "forward".  To do so, get the pointer at the beginning and then bump it
+  // up.
+  ptr = ptr - data::hrtf::IMPULSE_LENGTH + 1;
+
+  for (unsigned int j = 0; j < data::hrtf::IMPULSE_LENGTH; j += 8) {
+#define DECL(X) float s##X = ptr[j + X], l##X = hrir_left[j + X], r##X = hrir_right[j + X]
+    DECL(0);
+    DECL(1);
+    DECL(2);
+    DECL(3);
+    DECL(4);
+    DECL(5);
+    DECL(6);
+    DECL(7);
+
+#undef DECL
+
+#define RES(X) float rl##X = s##X * l##X, rr##X = s##X * r##X
+
+    RES(0);
+    RES(1);
+    RES(2);
+    RES(3);
+    RES(4);
+    RES(5);
+    RES(6);
+    RES(7);
+
+#undef RES
+
+    redl0 += rl0 + rl1;
+    redl1 += rl2 + rl3;
+    redl2 += rl4 + rl5;
+    redl3 += rl6 + rl7;
+    redr0 += rr0 + rr1;
+    redr1 += rr2 + rr3;
+    redr2 += rr4 + rr5;
+    redr3 += rr6 + rr7;
   }
 
-  // We have to scatter these out, to re-interleave them.
-  *dest_l = accumulator_left;
-  *dest_r = accumulator_right;
+  *dest_l = (redl0 + redl1) + (redl2 + redl3);
+  *dest_r = (redr0 + redr1) + (redr2 + redr3);
 }
 
+// Since MSVC refuses to vectorize the proceeding generic version of this well, and since Clang could vectorize better
+// versions but that hurts MSVC, we carve out the following optimized implementation using intrinsics.
+#if BOOST_HW_SIMD_X86 >= BOOST_HW_SIMD_X86_SSE2_VERSION
+FLATTENED float horizontalSum(__m128 input) {
+  __m128 halves_swapped = _mm_shuffle_ps(input, input, _MM_SHUFFLE(1, 0, 3, 2));
+  __m128 halves_summed = _mm_add_ps(input, halves_swapped);
+  __m128 subhalves = _mm_shuffle_ps(halves_swapped, halves_swapped, _MM_SHUFFLE(2, 3, 0, 1));
+  return _mm_cvtss_f32(_mm_add_ps(subhalves, halves_summed));
+}
+
+FLATTENED void stepConvolution(float *ptr, const float *hrir_left, const float *hrir_right, float *dest_l,
+                               float *dest_r) {
+  static_assert(data::hrtf::IMPULSE_LENGTH > 4);
+  static_assert(data::hrtf::IMPULSE_LENGTH % 4 == 0);
+
+  __m128 acc_l = _mm_setzero_ps();
+  __m128 acc_r = _mm_setzero_ps();
+
+  ptr = ptr - data::hrtf::IMPULSE_LENGTH + 1;
+  for (unsigned int i = 0; i < data::hrtf::IMPULSE_LENGTH; i += 4) {
+    __m128 sample = _mm_loadu_ps(ptr + i);
+    __m128 impulse_left = _mm_loadu_ps(hrir_left + i);
+    __m128 impulse_right = _mm_loadu_ps(hrir_right + i);
+    __m128 tmp_l = _mm_mul_ps(sample, impulse_left);
+    __m128 tmp_r = _mm_mul_ps(sample, impulse_right);
+    acc_l = _mm_add_ps(tmp_l, acc_l);
+    acc_r = _mm_add_ps(tmp_r, acc_r);
+  }
+
+  *dest_l = horizontalSum(acc_l);
+  *dest_r = horizontalSum(acc_r);
+}
+#endif
+} // namespace hrtf_panner_detail
+
 inline void HrtfPanner::run(float *output) {
-  float *prev_hrir = nullptr;
-  float *cur_hrir = &this->hrirs[this->current_hrir * 2 * data::hrtf::IMPULSE_LENGTH];
+  float *prev_hrir_l = nullptr;
+  float *prev_hrir_r = nullptr;
+  float *cur_hrir_l = this->impulse_l[this->current_hrir].data();
+  float *cur_hrir_r = this->impulse_r[this->current_hrir].data();
 
   bool crossfade = this->moved;
   this->moved = false;
 
   if (crossfade) {
-    prev_hrir = cur_hrir;
+    prev_hrir_l = cur_hrir_l;
+    prev_hrir_r = cur_hrir_r;
     this->current_hrir ^= 1;
-    cur_hrir = &this->hrirs[this->current_hrir * 2 * data::hrtf::IMPULSE_LENGTH];
+    cur_hrir_l = this->impulse_l[this->current_hrir].data();
+    cur_hrir_r = this->impulse_r[this->current_hrir].data();
   }
 
   if (crossfade) {
-    computeHrtfImpulses(this->azimuth, this->elevation, cur_hrir, 2, cur_hrir + 1, 2);
+    computeHrtfImpulses(this->azimuth, this->elevation, cur_hrir_l, cur_hrir_r);
+    std::reverse(cur_hrir_l, cur_hrir_l + data::hrtf::IMPULSE_LENGTH);
+    std::reverse(cur_hrir_r, cur_hrir_r + data::hrtf::IMPULSE_LENGTH);
   }
 
-  unsigned int crossfade_samples = crossfade ? config::CROSSFADE_SAMPLES : 0;
-  unsigned int normal_samples = config::BLOCK_SIZE - crossfade_samples;
-  assert(crossfade_samples + normal_samples == config::BLOCK_SIZE);
+  float *itd_block_left = this->itd_line_left.getNextBlock();
+  float *itd_block_right = this->itd_line_right.getNextBlock();
 
-  float *itd_block = this->itd_line.getNextBlock();
-  input_line.runReadLoopSplit(
-      data::hrtf::IMPULSE_LENGTH - 1, crossfade_samples,
-      [&](unsigned int i, auto &reader) {
-        float l_old, l_new, r_old, r_new;
-        this->stepConvolution(reader, prev_hrir, &l_old, &r_old);
-        this->stepConvolution(reader, cur_hrir, &l_new, &r_new);
-        float *out = itd_block + 2 * i;
-        float w1 = i / (float)config::CROSSFADE_SAMPLES;
-        float w0 = 1.0f - w1;
+  auto input_mp = this->input_line.getModPointer(data::hrtf::IMPULSE_LENGTH - 1);
+  std::visit(
+      [&](auto &ptr, auto crossfading) {
+        constexpr unsigned int crossfade_loop_count = crossfading ? config::CROSSFADE_SAMPLES : 0;
 
-        out[0] = l_old * w0 + l_new * w1;
-        out[1] = r_old * w0 + r_new * w1;
+        for (unsigned int i = 0; i < crossfade_loop_count; i++) {
+          float l_old, l_new, r_old, r_new;
+          hrtf_panner_detail::stepConvolution(ptr + i, prev_hrir_l, prev_hrir_r, &l_old, &r_old);
+          hrtf_panner_detail::stepConvolution(ptr + i, cur_hrir_l, cur_hrir_r, &l_new, &r_new);
+          float w1 = i / (float)config::CROSSFADE_SAMPLES;
+          float w0 = 1.0f - w1;
+
+          itd_block_left[i] = l_old * w0 + l_new * w1;
+          itd_block_right[i] = r_old * w0 + r_new * w1;
+        }
+
+        for (unsigned int i = crossfade_loop_count; i < config::BLOCK_SIZE; i++) {
+          hrtf_panner_detail::stepConvolution(ptr + i, cur_hrir_l, cur_hrir_r, &itd_block_left[i], &itd_block_right[i]);
+        }
       },
-      normal_samples,
-      [&](unsigned int i, auto &reader) {
-        this->stepConvolution(reader, cur_hrir, &itd_block[2 * i], &itd_block[2 * i + 1]);
-      });
+      input_mp, vCond(crossfade));
+  this->input_line.incrementBlock();
 
   /*
    *pre-unrolled weights for the left and right ear.
    * Early is too little delay. Late is too much.
    */
   auto itds = computeInterauralTimeDifference(this->azimuth, this->elevation);
-  double itd_l = std::get<0>(itds);
-  double itd_r = std::get<1>(itds);
+  float itd_l = std::get<0>(itds);
+  float itd_r = std::get<1>(itds);
   unsigned int itd_l_i = itd_l, itd_r_i = itd_r;
 
-  double itd_w_late_l = itd_l - itd_l_i;
-  double itd_w_early_l = 1.0 - itd_w_late_l;
-  double itd_w_late_r = itd_r - itd_r_i;
-  double itd_w_early_r = 1.0 - itd_w_late_r;
+  float itd_w_late_l = itd_l - itd_l_i;
+  float itd_w_early_l = 1.0 - itd_w_late_l;
+  float itd_w_late_r = itd_r - itd_r_i;
+  float itd_w_early_r = 1.0 - itd_w_late_r;
 
-  this->itd_line.runReadLoopSplit(
-      config::HRTF_MAX_ITD,
-      /* Crossfade the delays, if necessary. */
-      crossfade_samples,
-      [&](unsigned int i, auto &reader) {
-        float *o = output + i * 2;
-        double fraction = i / (float)config::CROSSFADE_SAMPLES;
+  // Let's figure out if we can use less than the max hrtf delay.
+  unsigned int needed_itd_l = config::HRTF_MAX_ITD, needed_itd_r = config::HRTF_MAX_ITD;
+  bool left_is_zero = itd_l == 0.0f && this->prev_itd_l == 0.0f;
+  bool right_is_zero = itd_r == 0.0f && this->prev_itd_r == 0.0f;
 
-        double prev_itd_l = this->prev_itd_l, prev_itd_r = this->prev_itd_r;
+  // The max delay for either side is either 0, by the above check, or 1 more than the maximum of the current and
+  // previous ITD.  Since the steady state has the current and previous ITD as the same, the max simplifies in that case
+  // to just the current ITD.
+  needed_itd_l = left_is_zero ? 0 : std::max(itd_l_i, (unsigned int)this->prev_itd_l) + 1;
+  needed_itd_r = right_is_zero ? 0 : std::max(itd_r_i, (unsigned int)this->prev_itd_r) + 1;
 
-        double left = itd_l * fraction + prev_itd_l * (1.0 - fraction);
-        double right = itd_r * fraction + prev_itd_r * (1.0 - fraction);
-        assert(left >= 0.0);
-        assert(right >= 0.0);
-        unsigned int left_s = left, right_s = right;
-        double wl = left - left_s;
-        double wr = right - right_s;
-        float lse = reader.read(0, left_s), lsl = reader.read(0, left_s + 1);
-        float rse = reader.read(1, right_s), rsl = reader.read(1, right_s + 1);
-        float ls = lsl * wl + lse * (1.0f - wl);
-        float rs = rsl * wr + rse * (1.0f - wr);
-        o[0] += ls;
-        o[1] += rs;
+  auto itd_left_mp = this->itd_line_left.getModPointer(needed_itd_l);
+  auto itd_right_mp = this->itd_line_right.getModPointer(needed_itd_r);
+
+  std::visit(
+      [&](auto ptr_left, auto ptr_left_zero, auto ptr_right, auto ptr_right_zero) {
+        // these help the compilere out by telling it our static loop counts in a way where we can know whether the
+        // crossfade loop will run at compile time, via the VBool specialization.
+        constexpr unsigned int crossfade_loop_count = ptr_left_zero && ptr_right_zero ? 0 : config::CROSSFADE_SAMPLES;
+
+        float prev_itd_l = this->prev_itd_l, prev_itd_r = this->prev_itd_r;
+
+        for (unsigned int i = 0; i < crossfade_loop_count; i++) {
+          float *o = output + i * 2;
+          float itd_w1 = i * (1.0f / (float)config::CROSSFADE_SAMPLES);
+          float itd_w2 = 1.0f - itd_w1;
+
+          float left = itd_l * itd_w1 + prev_itd_l * itd_w2;
+          float right = itd_r * itd_w1 + prev_itd_r * itd_w2;
+          assert(left >= 0.0);
+          assert(right >= 0.0);
+          unsigned int left_s = left, right_s = right;
+          float wl = left - left_s;
+          float wr = right - right_s;
+          auto del_left_ptr = ptr_left - (left_s + 1) + i;
+          auto del_right_ptr = ptr_right - (right_s + 1) + i;
+          float lse = del_left_ptr[1], lsl = del_left_ptr[0];
+          float rse = del_right_ptr[1], rsl = del_right_ptr[0];
+          float ls = lsl * wl + lse * (1.0f - wl);
+          float rs = rsl * wr + rse * (1.0f - wr);
+          o[0] += ls;
+          o[1] += rs;
+        }
+
+        for (unsigned int i = crossfade_loop_count; i < config::BLOCK_SIZE; i++) {
+          float *o = output + i * 2;
+
+          if (ptr_left_zero) {
+            o[0] = ptr_left[i];
+          } else {
+            auto del_left_ptr = ptr_left - (itd_l_i + 1) + i;
+            float lse = del_left_ptr[1], lsl = del_left_ptr[0];
+            o[0] += itd_w_early_l * lse + itd_w_late_l * lsl;
+          }
+
+          if (ptr_right_zero) {
+            o[1] = ptr_right[i];
+          } else {
+            auto del_right_ptr = ptr_right - (itd_r_i + 1) + i;
+            float rse = del_right_ptr[1], rsl = del_right_ptr[0];
+            o[1] += itd_w_early_r * rse + itd_w_late_r * rsl;
+          }
+        }
       },
-      /* Then do the main loop. */
-      normal_samples,
-      [&](unsigned int i, auto &reader) {
-        float *o = output + i * 2;
-        float lse = reader.read(0, itd_l_i), lsl = reader.read(0, itd_l_i + 1);
-        float rse = reader.read(1, itd_r_i), rsl = reader.read(1, itd_r_i + 1);
-        o[0] += itd_w_early_l * lse + itd_w_late_l * lsl;
-        o[1] += itd_w_early_r * rse + itd_w_late_r * rsl;
-      });
+      itd_left_mp, vCond(left_is_zero), itd_right_mp, vCond(right_is_zero));
+
+  this->itd_line_left.incrementBlock();
+  this->itd_line_right.incrementBlock();
 
   this->prev_itd_l = itd_l;
   this->prev_itd_r = itd_r;
