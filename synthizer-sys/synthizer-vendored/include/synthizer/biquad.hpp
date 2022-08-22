@@ -129,12 +129,7 @@ inline void ConcreteBiquadFilter<CHANNELS>::processBlockImpl(float *in, float *o
    * But we can only optimize it if we aren't crossfading, or there will be artifacts.
    * */
   if (CROSSFADE == false && this->is_wire) {
-    // If we aren't adding, and the input and output are the same buffer, don't do a meaningless copy.
-    if (in == out && ADD == false) {
-      return;
-    }
-
-        for (unsigned int i = 0; i < config::BLOCK_SIZE * CHANNELS; i++) {
+    for (unsigned int i = 0; i < config::BLOCK_SIZE * CHANNELS; i++) {
       out[i] = ADD ? out[i] + in[i] : in[i];
     }
     return;
