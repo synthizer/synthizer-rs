@@ -63,14 +63,17 @@ AudioOutputDevice::AudioOutputDevice() {
   config = ma_device_config_init(ma_device_type_playback);
   config.playback.format = ma_format_f32;
   config.playback.channels = 2;
-  config.periodSizeInFrames = 0;
-  /* Default periods. */
-  config.periods = 0;
+  config.periodSizeInFrames = config::BLOCK_SIZE;
+  // Miniaudio defaults will try for like 5 ms latency. We need more than that.
+  config.periods = 7; // about 40 ms.
   /* Use default sample rate. */
   config.sampleRate = 0;
   config.dataCallback = miniaudioDataCallback;
   config.pUserData = (void *)this;
   config.performanceProfile = ma_performance_profile_low_latency;
+  // Let's not implicitly start fiddling with the FP environment.  If Synthizer decides it needs to handle denormals
+  // specially, we'll handle it ourselves.
+  config.noDisableDenormals = MA_TRUE;
 
   if (ma_device_init(NULL, &config, &this->device) != MA_SUCCESS)
     throw EAudioDevice("Unable to initialize miniaudio.");

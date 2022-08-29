@@ -75,7 +75,7 @@ void Context::shutdown() {
   }
   this->drainDeletionQueues();
   /* We're shut down, just deinitialize all of them to kill strong references. */
-  this->command_queue.processAll([](auto &cmd) { cmd.deinitialize(); });
+  this->command_queue.process([](auto &cmd) { cmd.deinitialize(); }, SIZE_MAX);
 }
 
 void Context::cDelete() {
@@ -236,22 +236,26 @@ void Context::generateAudio(unsigned int channels, float *destination) {
     });
 
     this->block_time.fetch_add(1, std::memory_order_relaxed);
+  } catch (std::exception &e) {
+    logError("Got an exception in the audio callback: %s", e.what());
   } catch (...) {
-    logError("Got an exception in the audio callback");
+    logError("Got an unknown exception in the audio callback");
   }
 
   logForClipping(channels, destination);
 }
 
 void Context::runCommands() {
-  this->command_queue.processAll([&](auto &cmd) {
-    try {
-      auto deinit = AtScopeExit([&]() { cmd.deinitialize(); });
-      cmd.execute();
-    } catch (std::exception &e) {
-      logError("Got exception applying property write: %s", e.what());
-    }
-  });
+  this->command_queue.process(
+      [&](auto &cmd) {
+        try {
+          auto deinit = AtScopeExit([&]() { cmd.deinitialize(); });
+          cmd.execute();
+        } catch (std::exception &e) {
+          logError("Got exception applying property write: %s", e.what());
+        }
+      },
+      config::MAX_COMMANDS_PER_TICK);
 }
 
 void Context::enqueueDeletionRecord(DeletionCallback cb, void *arg) {

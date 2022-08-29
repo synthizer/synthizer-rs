@@ -52,14 +52,13 @@ const int HRTF_MAX_ITD = 64;
  * */
 const int PANNER_MAX_LANES = 4;
 
-/*
- * When storing buffers, how big should each page be? See buffer.hpp for explanation of how buffers work.
+/**
+ * When decoding buffers, how many samples should we try to decode at once?
  *
- * Powers of 2 are best for performance.
- *
- * Note: the primary trade-off here isn't memory fragmentation, it's speed at the boundaries.
+ * Higher values decode faster, but there can be up to this number of frames of wasted/unused memory at the end of the
+ * buffer.
  * */
-const std::size_t BUFFER_CHUNK_SIZE = (1 << 14);
+const std::size_t BUFFER_DECODE_CHUNK_SIZE = (1 << 14);
 
 /*
  * maximum size of a command.
@@ -67,6 +66,11 @@ const std::size_t BUFFER_CHUNK_SIZE = (1 << 14);
  * This is used to make the MpscRing entirely inline by using aligned_storage.
  * */
 const std::size_t MAX_COMMAND_SIZE = 128;
+
+/**
+ * Maximum number of commands to process per tick of a context.
+ * */
+const std::size_t MAX_COMMANDS_PER_TICK = 10000;
 
 } // namespace config
 } // namespace synthizer

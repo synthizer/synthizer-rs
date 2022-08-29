@@ -8,6 +8,7 @@
 #include "synthizer/generator.hpp"
 #include "synthizer/property_internals.hpp"
 #include "synthizer/types.hpp"
+#include "synthizer/vbool.hpp"
 
 #include <memory>
 #include <optional>
@@ -32,11 +33,15 @@ public:
 #include "synthizer/property_impl.hpp"
 
 private:
-  template <bool L> void readInterpolated(double pos, float *out, float gain);
-  /* Adds to destination, per the generators API. */
-  void generateNoPitchBend(float *out, FadeDriver *gain_driver);
-  template <bool L> void generatePitchBendHelper(float *out, FadeDriver *gain_driver, double pitch_bend);
-  void generatePitchBend(float *out, FadeDriver *gain_driver, double pitch_bend);
+  /**
+   * Adds to the buffer. Returns by how much to increment the position.
+   * */
+  std::size_t generateNoPitchBend(float *out, FadeDriver *gain_driver);
+
+  /**
+   * Adds to the buffer. Returns by how much to increment the position.
+   * */
+  std::size_t generatePitchBend(float *out, FadeDriver *gain_driver);
 
   /*
    * Handle configuring properties, and set the non-property state variables up appropriately.
@@ -45,18 +50,21 @@ private:
    * should be skipped.
    */
   bool handlePropertyConfig();
-  /**
-   * Either sends finished or looped, depending.
-   * */
-  void handleEndEvent();
 
   BufferReader reader;
+
   /**
-   * Counters for events.
+   * Set when this generator finishes. Used as an edge trigger to send a finished event, since buffers can only finish
+   * once per block.
    * */
-  unsigned int finished_count = 0, looped_count = 0;
-  bool sent_finished = false;
-  double position_in_samples = 0.0;
+  bool finished = false;
+
+  std::size_t position_in_frames = 0;
+
+  /**
+   * The fractional part of the position used for handling pitch bend.
+   * */
+  double pitch_fraction = 0.0;
 };
 
 inline BufferGenerator::BufferGenerator(std::shared_ptr<Context> ctx) : Generator(ctx) {}
@@ -73,127 +81,165 @@ inline unsigned int BufferGenerator::getChannels() {
 }
 
 inline void BufferGenerator::generateBlock(float *output, FadeDriver *gd) {
-  double new_pos, pitch_bend;
+  double new_pos;
 
   if (this->handlePropertyConfig() == false) {
     return;
   }
 
-  pitch_bend = this->getPitchBend();
-
   if (this->acquirePlaybackPosition(new_pos)) {
-    this->position_in_samples = std::min(new_pos * config::SR, (double)this->reader.getLength());
-    this->sent_finished = false;
+    this->position_in_frames =
+        std::min<std::size_t>(new_pos * config::SR, (double)this->reader.getLengthInSamples(false));
+    this->finished = false;
   }
 
-  if (std::fabs(1.0 - pitch_bend) > 0.001) {
-    this->generatePitchBend(output, gd, pitch_bend);
+  // We saw the end and haven't seeked or set the buffer, so don't do anything.
+  if (this->finished == true) {
+    return;
+  }
+
+  std::size_t pos_increment;
+
+  if (this->getPitchBend() == 1.0) {
+    pos_increment = this->generateNoPitchBend(output, gd);
   } else {
-    this->generateNoPitchBend(output, gd);
+    pos_increment = this->generatePitchBend(output, gd);
   }
 
-  this->setPlaybackPosition(this->position_in_samples / config::SR, false);
-
-  while (this->looped_count > 0) {
-    sendLoopedEvent(this->getContext(), this->shared_from_this());
-    this->looped_count--;
-  }
-  while (this->finished_count > 0) {
-    sendFinishedEvent(this->getContext(), this->shared_from_this());
-    this->finished_count--;
-  }
-}
-
-template <bool L> inline void BufferGenerator::readInterpolated(double pos, float *out, float gain) {
-  std::array<float, config::MAX_CHANNELS> f1, f2;
-  std::size_t lower = std::floor(pos);
-  std::size_t upper = lower + 1;
-  if (L)
-    upper = upper % this->reader.getLength();
-  // Important: upper < lower if upper was past the last sample.
-  float w2 = pos - lower;
-  float w1 = 1.0 - w2;
-  this->reader.readFrame(lower, &f1[0]);
-  this->reader.readFrame(upper, &f2[0]);
-  for (unsigned int i = 0; i < this->reader.getChannels(); i++) {
-    out[i] += gain * (f1[i] * w1 + f2[i] * w2);
-  }
-}
-
-template <bool L>
-inline void BufferGenerator::generatePitchBendHelper(float *output, FadeDriver *gd, double pitch_bend) {
-  double pos = this->position_in_samples;
-  double delta = pitch_bend;
-  gd->drive(this->getContextRaw()->getBlockTime(), [&](auto &gain_cb) {
-    for (unsigned int i = 0; i < config::BLOCK_SIZE; i++) {
-      float g = gain_cb(i);
-      this->readInterpolated<L>(pos, &output[i * this->reader.getChannels()], g);
-      double new_pos = pos + delta;
-      if (L == true) {
-        new_pos = std::fmod(new_pos, this->reader.getLength());
-        if (new_pos < pos) {
-          this->looped_count += 1;
-        }
-      } else if (pos > this->reader.getLength()) {
-        if (this->sent_finished == false) {
-          /* Don't forget to guard against sending this multiple times. */
-          this->finished_count += 1;
-          this->sent_finished = true;
-        }
-        break;
-      }
-      pos = new_pos;
-    }
-  });
-  this->position_in_samples = std::min<double>(pos, this->reader.getLength());
-}
-
-inline void BufferGenerator::generatePitchBend(float *output, FadeDriver *gd, double pitch_bend) {
   if (this->getLooping()) {
-    return this->generatePitchBendHelper<true>(output, gd, pitch_bend);
-  } else {
-    return this->generatePitchBendHelper<false>(output, gd, pitch_bend);
+    unsigned int loop_count = (this->position_in_frames + pos_increment + 1) / this->reader.getLengthInFrames(false);
+    for (unsigned int i = 0; i < loop_count; i++) {
+      sendLoopedEvent(this->getContext(), this->shared_from_this());
+    }
+  } else if (this->finished == false &&
+             this->position_in_frames + pos_increment + 1 >= this->reader.getLengthInFrames(false)) {
+    sendFinishedEvent(this->getContext(), this->shared_from_this());
+    this->finished = true;
   }
+
+  this->position_in_frames = (this->position_in_frames + pos_increment) % this->reader.getLengthInFrames(false);
+  this->setPlaybackPosition(this->position_in_frames / (double)config::SR, false);
 }
 
-inline void BufferGenerator::generateNoPitchBend(float *output, FadeDriver *gd) {
-  auto workspace_guard = acquireBlockBuffer();
-  float *workspace = workspace_guard;
-  std::size_t pos = std::round(this->position_in_samples);
-  float *cursor = output;
-  unsigned int remaining = config::BLOCK_SIZE;
-  bool looping = this->getLooping() != 0;
-  unsigned int i = 0;
+inline std::size_t BufferGenerator::generateNoPitchBend(float *output, FadeDriver *gd) {
+  assert(this->finished == false);
 
-  gd->drive(this->getContextRaw()->getBlockTime(), [&](auto &gain_cb) {
-    while (remaining) {
-      auto got = this->reader.readFrames(pos, remaining, workspace);
-      for (unsigned int j = 0; j < got; i++, j++) {
-        float g = gain_cb(i);
-        for (unsigned int ch = 0; ch < this->reader.getChannels(); ch++) {
-          cursor[j * this->reader.getChannels() + ch] += g * workspace[j * this->reader.getChannels() + ch];
-        }
-      }
-      remaining -= got;
-      cursor += got * this->reader.getChannels();
-      pos += got;
-      if (remaining > 0) {
-        if (looping == false) {
-          if (this->sent_finished == false) {
-            this->finished_count += 1;
-            this->sent_finished = true;
+  std::size_t will_read_frames = config::BLOCK_SIZE;
+  if (this->position_in_frames + will_read_frames > this->reader.getLengthInFrames(false) &&
+      this->getLooping() == false) {
+    will_read_frames = this->reader.getLengthInFrames(false) - this->position_in_frames - 1;
+    will_read_frames = std::min<std::size_t>(will_read_frames, config::BLOCK_SIZE);
+  }
+
+  // Compilers are bad about telling that channels doesn't change.
+  const unsigned int channels = this->getChannels();
+
+  auto mp = this->reader.getFrameSlice(this->position_in_frames, will_read_frames, false, true);
+  std::visit(
+      [&](auto ptr) {
+        gd->drive(this->getContextRaw()->getBlockTime(), [&](auto gain_cb) {
+          for (std::size_t i = 0; i < will_read_frames; i++) {
+            float gain = gain_cb(i) * (1.0f / 32768.0f);
+            for (unsigned int ch = 0; ch < channels; ch++) {
+              output[i * channels + ch] += ptr[i * channels + ch] * gain;
+            }
           }
-          break;
-        } else {
-          pos = 0;
-          this->looped_count += 1;
-        }
-      }
-    }
-  });
-  assert(i <= config::BLOCK_SIZE);
+        });
+      },
+      mp);
 
-  this->position_in_samples = pos;
+  return will_read_frames;
+}
+
+inline std::size_t BufferGenerator::generatePitchBend(float *output, FadeDriver *gd) {
+  assert(this->finished == false);
+
+  double delta = this->getPitchBend();
+  std::size_t wrote_frames;
+
+  // This is a bit complicated.  First, we will read up to 1 more than the block size * delta.  But if that's past the
+  // end, we will instead read up to the end, and truncate our pitch bend early.
+  //
+  // We might also read a little bit more if pitch_fraction is big enough.
+  //
+  // This computation doesn't include the implicit zero, though we do use that, below.
+  std::size_t read_span_original = std::ceil(config::BLOCK_SIZE * delta + this->pitch_fraction);
+  std::size_t read_span = read_span_original;
+  if (this->position_in_frames + read_span > this->reader.getLengthInFrames(false) && this->getLooping() == false) {
+    read_span = this->reader.getLengthInFrames(false) - this->position_in_frames - 1;
+  }
+
+  // Compilers are bad about telling that channels doesn't change.
+  const unsigned int channels = this->getChannels();
+
+  // if we aren't looping, we include the implicit zero so that we can go slightly past the end of the buffer if needed,
+  // but need to tell getFrameSlice that we'll read that as well as that we want it.
+  //
+  // If we are looping, then we don't cut things off at upper and will need to read one more sample.
+  auto mp = this->reader.getFrameSlice(this->position_in_frames, read_span + 1, this->getLooping() == false, true);
+
+  bool truncated_non_vbool = read_span != read_span_original;
+
+  // In the below, it is very important never to add or subtract positions and to always use i * delta.  This avoids
+  // accumulating fp error.
+  std::visit(
+      [&](auto ptr,
+          auto truncated // whether or not we can output BLOCK_SIZE samples.
+      ) {
+        gd->drive(this->getContextRaw()->getBlockTime(), [&](auto gain_cb) {
+          // we need these two at the end, but leave upper in the loop to help the compiler realize that it doesn't
+          // introduce loop dependencies.
+          std::size_t i = 0, lower = 0;
+
+          for (; i < config::BLOCK_SIZE; i++) {
+            // We need to use doubles, because 65535 (the sum of two samples) is outside the range of integers a float
+            // can represent.
+            double gain = gain_cb(i) * (1.0 / 32768.0);
+
+            lower = delta * i;
+            std::size_t upper = lower + 1;
+
+            if (lower >= read_span && truncated == true) {
+              break;
+            }
+
+            double w2 = delta * i - lower;
+            double w1 = 1.0f - w2;
+
+            // Work these in here and we can avoid doing them in the loop that handles channels individually.
+            w1 *= gain;
+            w2 *= gain;
+
+            for (unsigned int ch = 0; ch < channels; ch++) {
+              float l_s = ptr[lower * channels + ch], u_s = ptr[upper * channels + ch];
+              float o = l_s * w1 + u_s * w2;
+              output[i * channels + ch] += o;
+            }
+
+            wrote_frames++;
+          }
+
+          // If this was truncated and upper is not at or past the end, then we have one more sample at the end of the
+          // buffer that is worth writing this time.
+          if (truncated == true && (this->position_in_frames + lower) < this->reader.getLengthInFrames(false) - 1 &&
+              i + 1 < config::BLOCK_SIZE) {
+            std::size_t final_frame_start = this->reader.getLengthInFrames(false) - channels;
+            float gain = gain_cb(i) / 32768.0f;
+            for (std::size_t ch = 0; ch < channels; ch++) {
+              output[i + ch] += ptr[final_frame_start + ch] * gain;
+            }
+
+            wrote_frames++;
+          }
+        });
+      },
+      mp, vCond(truncated_non_vbool));
+
+  this->pitch_fraction = std::fmod(this->position_in_frames + delta * wrote_frames, 1.0);
+
+  // The caller BufferGenerator::generate can handle going past the end of the buffer in the case when we're not
+  // looping, and when we're looping will_read_frames == will_read_frames_original.
+  return read_span_original;
 }
 
 inline bool BufferGenerator::handlePropertyConfig() {
@@ -209,7 +255,7 @@ inline bool BufferGenerator::handlePropertyConfig() {
   }
 
   this->reader.setBuffer(buffer.get());
-  this->sent_finished = false;
+  this->finished = false;
 
   // It is possible that the user set the buffer then changed the playback position.  It is very difficult to tell the
   // difference between this and setting the position immediately before changing the buffer without rewriting the
@@ -218,22 +264,13 @@ inline bool BufferGenerator::handlePropertyConfig() {
   //
   // Hopefully, this is rare.
   if (this->acquirePlaybackPosition(new_pos)) {
-    this->position_in_samples = std::min(new_pos * config::SR, (double)this->reader.getLength());
+    this->position_in_frames = std::min(new_pos * config::SR, (double)this->reader.getLengthInSamples(false));
   } else {
     this->setPlaybackPosition(0.0, false);
-    this->position_in_samples = 0.0;
+    this->position_in_frames = 0.0;
   }
 
   return false;
-}
-
-inline void BufferGenerator::handleEndEvent() {
-  auto ctx = this->getContext();
-  if (this->getLooping() == 1) {
-    sendLoopedEvent(ctx, this->shared_from_this());
-  } else {
-    sendFinishedEvent(ctx, this->shared_from_this());
-  }
 }
 
 inline std::optional<double> BufferGenerator::startGeneratorLingering() {
@@ -248,7 +285,7 @@ inline std::optional<double> BufferGenerator::startGeneratorLingering() {
   if (buf_strong == nullptr) {
     return 0.0;
   }
-  double remaining = buf_strong->getLength() / (double)config::SR - pos;
+  double remaining = buf_strong->getLengthInSamples(false) / (double)config::SR - pos;
   if (remaining < 0.0) {
     return 0.0;
   }

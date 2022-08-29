@@ -79,6 +79,7 @@ include(cmake/wdl.txt)
 
 include_directories(SYSTEM
   include
+  third_party/boost_partial
   third_party/miniaudio
   third_party/dr_libs
   third_party/stb
@@ -190,13 +191,13 @@ if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
   add_executable(file_test file_test.cpp)
   target_link_libraries(file_test synthizer)
 
-  add_executable(test_filter_repl test/INTERACTIVE/filter_repl.cpp)
+  add_executable(test_filter_repl test/interactive/filter_repl.cpp)
   target_link_libraries(test_filter_repl synthizer)
 
   add_executable(decoding_bench benchmarks/decoding.cpp)
   target_link_libraries(decoding_bench synthizer)
 
-  add_executable(test_noise test/INTERACTIVE/noise.cpp)
+  add_executable(test_noise test/interactive/noise.cpp)
   target_link_libraries(test_noise synthizer)
 
   add_executable(test_seeking test/interactive/seeking.cpp)
@@ -222,6 +223,7 @@ if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
   FetchContent_MakeAvailable(benchmark)
 
   add_executable(gbench
+    benchmarks/gbench/block_buffer_cache.cpp
     benchmarks/gbench/hrtf.cpp
     benchmarks/gbench/main.cpp
     benchmarks/gbench/property_write.cpp
@@ -249,6 +251,7 @@ if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
     test/mod_pointer.cpp
     test/property_automation_timeline.cpp
     test/random_float.cpp
+    test/sse2_horizontal_sum.cpp
     test/verify_properties.cpp
   )
   target_link_libraries(tests PRIVATE Catch2::Catch2 synthizer)
