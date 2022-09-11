@@ -33,7 +33,7 @@ set(SYZ_DEPS
 )
 
 if(NOT "${SYZ_INTEGRATING}")
-  set(SYZ_TEST_DEPS benchmark catch2)
+  set(SYZ_TEST_DEPS catch2 benchmark)
 endif()
 
 FetchContent_MakeAvailable(${SYZ_DEPS} ${SYZ_TEST_DEPS})
@@ -41,10 +41,13 @@ FetchContent_MakeAvailable(wdl)
 
 include_directories(include)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Xclang -fno-caret-diagnostics
-    -Xclang -Wno-deprecated-declarations
-    -Xclang -Wno-logical-op-parentheses
+    -Wno-deprecated-declarations
+    -Wno-logical-op-parentheses
+    -Wno-unknown-pragmas
+    # We have warning pragmas that are GCC specific.
+    -Wno-unknown-warning-option
   )
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options(
@@ -72,6 +75,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # targeted fashion.
     /wd4702
   )
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  ADD_COMPILE_OPTIONS(-Wno-unknown-pragmas)
 endif()
 
 # Inspired by the module in https://github.com/vector-of-bool/CMakeCM/
@@ -167,6 +172,12 @@ if(DEFINED CI_SYNTHIZER_NAME)
   set_target_properties(synthizer PROPERTIES OUTPUT_NAME ${CI_SYNTHIZER_NAME})
 endif()
 
+# Something is insisting on adding -pedantic, which breaks the very complicated property_impl.hpp preprocessor magic for
+# generating properties.
+get_target_property(target_options synthizer COMPILE_OPTIONS)
+list(REMOVE_ITEM target_options "-pedantic")
+set_property(TARGET synthizer PROPERTY COMPILE_OPTIONS ${target_options})
+
 add_custom_target(data
 python "${CMAKE_SOURCE_DIR}/data_processor/main.py")
 
@@ -195,7 +206,6 @@ example(play_note c)
 example(print_version c)
 example(scalar_panned_source cpp)
 example(simple_automation c)
-
 # The following won't work on Windows unless compiled against a static build of Synthizer because we don't want to
 # expose the C++ internals from the DLL. Since these are just test programs and not actual utilities, disable them on
 # all platforms if the build isn't static.

@@ -5,6 +5,8 @@
 #include "synthizer/source.hpp"
 
 #include <memory>
+#include <optional>
+#include <utility>
 
 namespace synthizer {
 class Context;
@@ -26,7 +28,7 @@ protected:
    * delegated the panning strategy because this is the only way to maintain the total order.  Rather than being
    * complicated in that API where the logic is, just make sources deal.
    * */
-  std::optional<Panner> maybe_panner;
+  std::optional<Panner> maybe_panner = std::nullopt;
 };
 
 inline PannedSource::PannedSource(const std::shared_ptr<Context> context, int _panner_strategy)
@@ -38,7 +40,7 @@ inline void PannedSource::initInAudioThread() {
     effective_panner_strategy = this->getContextRaw()->getDefaultPannerStrategy();
   }
 
-  this->maybe_panner.emplace(buildPannerForStrategy(effective_panner_strategy));
+    this->maybe_panner.emplace(buildPannerForStrategy(effective_panner_strategy));
 }
 
 inline void PannedSource::run(unsigned int out_channels, float *out) {
