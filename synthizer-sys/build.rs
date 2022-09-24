@@ -26,6 +26,9 @@ fn main() {
     };
     cfg.configure_arg(&format!("-DCMAKE_MSVC_RUNTIME_LIBRARY={}", rt));
 
+    // ONly build the core library.
+    cfg.configure_arg("-DSYZ_INTEGRATING=ON");
+
     let dst = cfg.build();
 
     println!("cargo:rustc-link-search=all={}/lib", dst.display());
