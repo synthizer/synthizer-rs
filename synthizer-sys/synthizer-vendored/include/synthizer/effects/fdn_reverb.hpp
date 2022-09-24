@@ -1,16 +1,18 @@
 #pragma once
 
 #include "synthizer.h"
+#include "synthizer_constants.h"
 
 #include "synthizer/block_buffer_cache.hpp"
 #include "synthizer/block_delay_line.hpp"
 #include "synthizer/channel_mixing.hpp"
 #include "synthizer/config.hpp"
-#include "synthizer/effects/base_effect.hpp"
+#include "synthizer/effects/global_effect.hpp"
 #include "synthizer/iir_filter.hpp"
 #include "synthizer/interpolated_random_sequence.hpp"
 #include "synthizer/math.hpp"
 #include "synthizer/memory.hpp"
+#include "synthizer/mod_pointer.hpp"
 #include "synthizer/prime_helpers.hpp"
 #include "synthizer/property_internals.hpp"
 #include "synthizer/random_generator.hpp"
@@ -25,6 +27,7 @@
 #include <memory>
 #include <numeric>
 #include <utility>
+#include <variant>
 
 namespace synthizer {
 
@@ -33,7 +36,7 @@ class Context;
 /*
  * An FDN reverberator using a household reflection matrix and an early reflections model.
  * */
-template <typename BASE> class FdnReverbEffect : public BASE {
+class GlobalFdnReverbEffect : public GlobalEffect {
 public:
   /* Number of lines in the FDN. */
   static constexpr unsigned int LINES = 8;
@@ -45,7 +48,7 @@ public:
    * Also, add in a little bit extra so that prime numbers above the range have room, since reading the primes array can
    * go out of range.
    * */
-  static constexpr unsigned int MAX_DELAY_SAMPLES = config::SR * 1;
+  static constexpr unsigned int MAX_DELAY_SAMPLES = nextPowerOfTwo(config::SR * 1);
   static constexpr float MAX_DELAY_SECONDS = 1.0f;
   /*
    * In the primes-finding algorithm, if we push up against the far end of what we can reasonably handle, we need to cap
@@ -58,7 +61,7 @@ public:
    * */
   static constexpr unsigned int MAX_FEEDBACK_DELAY = 0.35 * config::SR;
 
-  FdnReverbEffect(const std::shared_ptr<Context> &ctx) : BASE(ctx, 1) {
+  GlobalFdnReverbEffect(const std::shared_ptr<Context> &ctx) : GlobalEffect(ctx, 1) {
     syz_BiquadConfig filter_cfg;
     syz_biquadDesignLowpass(&filter_cfg, 2000, 0.7071135624381276);
     this->setFilterInput(filter_cfg);
@@ -71,9 +74,10 @@ public:
                  float *output, float gain) override;
   void resetEffect() override;
   double getEffectLingerTimeout() override;
+  int getObjectType() override;
 
 #define PROPERTY_CLASS FdnReverbEffect
-#define PROPERTY_BASE BASE
+#define PROPERTY_BASE GlobalEffect
 #define PROPERTY_LIST FDN_REVERB_EFFECT_PROPERTIES
 #include "synthizer/property_impl.hpp"
 private:
@@ -103,7 +107,7 @@ private:
   std::array<InterpolatedRandomSequence, LINES> late_modulators;
 };
 
-template <typename BASE> void FdnReverbEffect<BASE>::maybeRecomputeModel() {
+inline void GlobalFdnReverbEffect::maybeRecomputeModel() {
   bool dirty = false;
 
   /*
@@ -285,15 +289,14 @@ template <typename BASE> void FdnReverbEffect<BASE>::maybeRecomputeModel() {
   }
 }
 
-template <typename BASE> void FdnReverbEffect<BASE>::resetEffect() {
+inline void GlobalFdnReverbEffect::resetEffect() {
   this->lines.clear();
   this->feedback_eq.reset();
   this->input_filter.reset();
 }
 
-template <typename BASE>
-void FdnReverbEffect<BASE>::runEffect(unsigned int block_time, unsigned int input_channels, float *input,
-                                      unsigned int output_channels, float *output, float gain) {
+inline void GlobalFdnReverbEffect::runEffect(unsigned int block_time, unsigned int input_channels, float *input,
+                                             unsigned int output_channels, float *output, float gain) {
   (void)block_time;
 
   /*
@@ -321,70 +324,80 @@ void FdnReverbEffect<BASE>::runEffect(unsigned int block_time, unsigned int inpu
   }
   max_delay = std::max(max_delay, this->late_reflections_delay_samples);
 
-  /*
-   * Normally we would go through a temporary buffer to premix channels here, and we still might, but we're using the
-   * delay line's write loop and it's always to mono; just do it inline.
-   * */
-  this->lines.runRwLoop(max_delay, [&](unsigned int i, auto &rw) {
-    float *input_ptr = input + input_channels * i;
-    float input_sample = 0.0f;
+  auto mp = this->lines.getModPointer(max_delay);
+  std::visit(
+      [=](auto &ptr) {
+        for (unsigned int i = 0; i < config::BLOCK_SIZE; i++) {
+          float *input_ptr = input + input_channels * i;
+          float input_sample = 0.0f;
 
-    /* Mono downmix. */
-    for (unsigned int ch = 0; ch < input_channels; ch++) {
-      input_sample += input_ptr[ch];
-    }
-    input_sample *= 1.0f / input_channels;
+          /* Mono downmix. */
+          for (unsigned int ch = 0; ch < input_channels; ch++) {
+            input_sample += input_ptr[ch];
+          }
+          input_sample *= 1.0f / input_channels;
 
-    /*
-     * Apply the initial filter. The purpose is to let the user make the reverb less harsh on high-frequency sounds.
-     * */
-    this->input_filter.tick(&input_sample, &input_sample);
+          /*
+           * Apply the initial filter. The purpose is to let the user make the reverb less harsh on high-frequency
+           * sounds.
+           * */
+          this->input_filter.tick(&input_sample, &input_sample);
 
-    /*
-     * Implement a householder reflection about <1, 1, 1, 1... >. This is a reflection about the hyperplane.
-     * */
+          /*
+           * Implement a householder reflection about <1, 1, 1, 1... >. This is a reflection about the hyperplane.
+           * */
 
-    /* not initialized because zeroing can be expensive and we set it immediately in the loop below. */
-    std::array<float, LINES> values;
-    for (unsigned int j = 0; j < LINES; j++) {
-      double delay = this->delays[j] + this->late_modulators[j].tick();
-      float w2 = delay - std::floor(delay);
-      float w1 = 1.0f - w2;
-      float v1 = rw.read(j, delay);
-      float v2 = rw.read(j, delay + 1);
-      values[j] = v1 * w1 + v2 * w2;
-    }
+          /* not initialized because zeroing can be expensive and we set it immediately in the loop below. */
+          std::array<float, LINES> values{{0}};
+          for (unsigned int j = 0; j < LINES; j++) {
+            double delay = this->delays[j] + this->late_modulators[j].tick();
+            auto cur_del = ptr - LINES * ((std::size_t)delay - 1) + j;
+            float w2 = delay - std::floor(delay);
+            float w1 = 1.0f - w2;
+            // This is a pointer to the delay line; higher indices are in the future.
+            float v1 = cur_del[LINES];
+            float v2 = cur_del[0];
+            values[j] = v1 * w1 + v2 * w2;
+          }
 
-    /*
-     * Pass it through the equalizer, which handles feedback.
-     * */
-    this->feedback_eq.tick(&values[0], &values[0]);
+          /*
+           * Pass it through the equalizer, which handles feedback.
+           * */
+          this->feedback_eq.tick(&values[0], &values[0]);
 
-    float sum = std::accumulate(values.begin(), values.end(), 0.0f);
-    sum *= 2.0f / LINES;
+          float sum = std::accumulate(values.begin(), values.end(), 0.0f);
+          sum *= 2.0f / LINES;
 
-    /*
-     * Write it back.
-     * */
-    float input_per_line = input_sample * (1.0f / LINES);
-    for (unsigned int j = 0; j < LINES; j++) {
-      rw.write(j, values[j] - sum + input_per_line);
-    }
+          /*
+           * Write it back.
+           * */
+          float input_per_line = input_sample * (1.0f / LINES);
+          for (unsigned int j = 0; j < LINES; j++) {
+            ptr[j] = values[j] - sum + input_per_line;
+          }
 
-    /*
-     * We want two decorrelated channels, with roughly the same amount of reflections in each.
-     * */
-    unsigned int d = this->late_reflections_delay_samples;
-    float *frame = rw.readFrame(d);
-    float l = frame[0] + frame[2] + frame[4] + frame[6];
-    float r = frame[1] + frame[3] + frame[5] + frame[7];
-    output_buf_ptr[2 * i] = l * gain;
-    output_buf_ptr[2 * i + 1] = r * gain;
-  });
+          /*
+           * We want two decorrelated channels, with roughly the same amount of reflections in each.
+           * */
+          unsigned int d = this->late_reflections_delay_samples;
+          auto out_frame = ptr - d * LINES;
+          float l = out_frame[0] + out_frame[2] + out_frame[4] + out_frame[6];
+          float r = out_frame[1] + out_frame[3] + out_frame[5] + out_frame[7];
+          output_buf_ptr[2 * i] = l * gain;
+          output_buf_ptr[2 * i + 1] = r * gain;
+
+          ptr += LINES;
+        }
+      },
+      mp);
+
+  this->lines.incrementBlock();
 
   mixChannels(config::BLOCK_SIZE, output_buf_ptr, 2, output, output_channels);
 }
 
-template <typename BASE> double FdnReverbEffect<BASE>::getEffectLingerTimeout() { return this->getT60(); }
+inline double GlobalFdnReverbEffect::getEffectLingerTimeout() { return this->getT60(); }
+
+inline int GlobalFdnReverbEffect::getObjectType() { return SYZ_OTYPE_GLOBAL_FDN_REVERB; }
 
 } // namespace synthizer

@@ -1,12 +1,18 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(synthizer VERSION 0.1.0 LANGUAGES C CXX)
 
+set(BENCHMARK_ENABLE_TESTING OFF)
+
+OPTION(SYZ_INTEGRATING "Set to ON to avoid linking examples etc. when integrating into a language's bindings" OFF)
+
 # Do this first; some things will quietly pick it up and it's
 # really hard to tell which.
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(deps)
+
 # Synthizer version.
-add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=11 SYZ_PATCH=7)
+add_compile_definitions(SYZ_MAJOR=0 SYZ_MINOR=1 SYZ_PATCH=9)
 
 include(CTest)
 include(CheckCXXSourceRuns)
@@ -14,10 +20,34 @@ enable_testing()
 
 find_package(Threads)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+set(SYZ_DEPS
+  boost_partial
+  concurrentqueue
+  cpp11-on-multicore
+  dr_libs
+  hedley
+  miniaudio
+  pdqsort
+  # wdl is special because it's an object library.
+  #wdl
+)
+
+if(NOT "${SYZ_INTEGRATING}")
+  set(SYZ_TEST_DEPS catch2 benchmark)
+endif()
+
+FetchContent_MakeAvailable(${SYZ_DEPS} ${SYZ_TEST_DEPS})
+FetchContent_MakeAvailable(wdl)
+
+include_directories(include)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Xclang -fno-caret-diagnostics
-    -Xclang -Wno-deprecated-declarations
-    -Xclang -Wno-logical-op-parentheses
+    -Wno-deprecated-declarations
+    -Wno-logical-op-parentheses
+    -Wno-unknown-pragmas
+    # We have warning pragmas that are GCC specific.
+    -Wno-unknown-warning-option
   )
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options(
@@ -45,6 +75,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # targeted fashion.
     /wd4702
   )
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  ADD_COMPILE_OPTIONS(-Wno-unknown-pragmas)
 endif()
 
 # Inspired by the module in https://github.com/vector-of-bool/CMakeCM/
@@ -71,101 +103,48 @@ else()
   message(STATUS "Found C++17 filesystem support")
 endif()
 
-include(cmake/wdl.txt)
 
-include_directories(SYSTEM
-  include
-  third_party/miniaudio
-  third_party/dr_libs
-  third_party/stb
-  third_party/cpp11-on-multicore/common
-  third_party/wdl
-  third_party/plf_colony
-  third_party/concurrentqueue
-  third_party/pdqsort
-)
 
 # Needs to be factored out so that -Wall doesn't apply to third-party deps.
 add_library(synthizer_single_file_libs OBJECT
   src/single_file_libs.c
 )
 set_property(TARGET synthizer_single_file_libs PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(synthizer_single_file_libs dr_libs miniaudio)
 
 set(SYNTHIZER_LIB_TYPE STATIC CACHE STRING "The build type for Synthizer. Either STATIC or SHARED")
 add_library(synthizer ${SYNTHIZER_LIB_TYPE}
   src/audio_output.cpp
-  src/automation_batch.cpp
-  src/background_thread.cpp
   src/base_object.cpp
-  src/biquad.cpp
-  src/block_buffer_cache.cpp
-  src/buffer.cpp
   src/byte_stream.cpp
-  src/c_api.cpp
-  src/channel_mixing.cpp
+  # includes our C API source files into a unity build.
+  src/c_api/unity.cpp
   src/context.cpp
   src/decoding.cpp
   src/error.cpp
   src/event_timeline.cpp
   src/events.cpp
-  src/filter_properties.cpp
   src/generator.cpp
-  src/hrtf.cpp
   src/logging.cpp
   src/memory.cpp
-  src/noise_generator.cpp
-  src/panner_bank.cpp
   src/pausable.cpp
-  src/prime_helpers.cpp
   src/property_internals.cpp
   src/routable.cpp
   src/router.cpp
   src/shared_object.cpp
-  src/source.cpp
-  src/spatialization_math.cpp
-  src/spsc_semaphore.cpp
-  src/stereo_panner.cpp
-  src/stream_handle.cpp
-  src/version.cpp
-
   src/data/arrays.cpp
   src/data/hrtf.cpp
-
-  src/decoders/flac.cpp
-  src/decoders/libsndfile.cpp
-  src/decoders/mp3.cpp
-  src/decoders/raw_decoder.cpp
-  src/decoders/wav.cpp
-
-  src/effects/echo.cpp
-  src/effects/effects.cpp
-  src/effects/fdn_reverb.cpp
-
-  src/filters/audio_eq_cookbook.cpp
-  src/filters/simple_filters.cpp
-
-  src/generators/buffer.cpp
-  src/generators/fast_sine_bank.cpp
-  src/generators/noise.cpp
-  src/generators/streaming.cpp
-
-  src/sources/angular_panned_source.cpp
-  src/sources/direct_source.cpp
-  src/sources/panned_source.cpp
-  src/sources/scalar_panned_source.cpp
-  src/sources/source3d.cpp
-
   src/streams/custom_stream.cpp
   src/streams/file.cpp
   src/streams/memory_stream.cpp
 
-  $<TARGET_OBJECTS:wdl>
+  $<TARGET_OBJECTS:wdl_objlib>
   $<TARGET_OBJECTS:synthizer_single_file_libs>
 )
 target_compile_features(synthizer PUBLIC cxx_std_17)
-target_link_libraries(synthizer wdl Threads::Threads ${CMAKE_DL_LIBS})
-
-target_compile_definitions(synthizer PRIVATE BUILDING_SYNTHIZER)
+target_link_libraries(synthizer ${SYZ_DEPS} Threads::Threads ${CMAKE_DL_LIBS})
+target_include_directories(synthizer PRIVATE $<TARGET_PROPERTY:wdl_objlib,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions(synthizer PRIVATE BUILDING_SYNTHIZER WDL_RESAMPLE_TYPE=float)
 # tells synthizer.h to define SYZ_CAPI for exporting shared object/dll symbols.
 # On windows this is dllexport.
 if("${SYNTHIZER_LIB_TYPE}" STREQUAL "SHARED")
@@ -178,10 +157,15 @@ endif()
 if(MSVC)
   target_compile_options(synthizer PRIVATE /W4 /WX)
 else()
-  target_compile_options(synthizer PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(synthizer PRIVATE -Wall -Wextra -Werror)
 endif()
 
 set_property(TARGET synthizer PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if (WIN32)
+  # Don't let MSVC define min and max from windows.h.
+  target_compile_definitions(synthizer PRIVATE NOMINMAX)
+endif()
 
 # For CI artifacts:
 if(DEFINED CI_SYNTHIZER_NAME)
@@ -195,10 +179,12 @@ python "${CMAKE_SOURCE_DIR}/data_processor/main.py")
 find_library(MATH_LIBRARY m)
 
 function(example NAME EXT)
-  add_executable(${NAME} ./examples/${NAME}.${EXT})
-  target_link_libraries(${NAME} synthizer)
-  if(MATH_LIBRARY)
-    target_link_libraries(${NAME} ${MATH_LIBRARY})
+  if (NOT "${SYZ_INTEGRATING}")
+    add_executable(${NAME} ./examples/${NAME}.${EXT})
+    target_link_libraries(${NAME} synthizer)
+    if(MATH_LIBRARY)
+      target_link_libraries(${NAME} ${MATH_LIBRARY})
+    endif()
   endif()
 endfunction()
 
@@ -214,61 +200,82 @@ example(play_note c)
 example(print_version c)
 example(scalar_panned_source cpp)
 example(simple_automation c)
-
-# The following won't work on Windows unless compiled against a static build of Synthizer because we don't want to expose the C++ internals from the DLL.
-# Since these are just test programs and not actual utilities, disable them on all platforms if the build isn't static.
-if("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC")
-  add_executable(delay_line_test test/delay_line.cpp)
-  target_link_libraries(delay_line_test synthizer)
-  add_test(NAME delay_line COMMAND delay_line_test)
-
+# The following won't work on Windows unless compiled against a static build of Synthizer because we don't want to
+# expose the C++ internals from the DLL. Since these are just test programs and not actual utilities, disable them on
+# all platforms if the build isn't static.
+if(("${SYNTHIZER_LIB_TYPE}" STREQUAL "STATIC") AND (NOT "${SYZ_INTEGRATING}"))
   add_executable(file_test file_test.cpp)
   target_link_libraries(file_test synthizer)
 
-  add_executable(test_filter_repl test/filter_repl.cpp)
+  add_executable(test_filter_repl test/interactive/filter_repl.cpp)
   target_link_libraries(test_filter_repl synthizer)
-
-  add_executable(property_write_bench benchmarks/property_write.cpp)
-  target_link_libraries(property_write_bench synthizer)
 
   add_executable(decoding_bench benchmarks/decoding.cpp)
   target_link_libraries(decoding_bench synthizer)
 
-  add_executable(test_random_float test/random_float.cpp)
-  target_link_libraries(test_random_float synthizer)
-
-  add_executable(test_noise test/noise.cpp)
+  add_executable(test_noise test/interactive/noise.cpp)
   target_link_libraries(test_noise synthizer)
 
-  add_executable(test_latch test/latch.cpp)
-  target_link_libraries(test_latch synthizer)
-  add_test(NAME latch COMMAND test_latch)
-
-  add_executable(test_verify_properties test/verify_properties.cpp)
-  target_link_libraries(test_verify_properties synthizer)
-  add_test(NAME verify_properties COMMAND test_verify_properties)
-
-  # can't be an actual unit test until we have silent contexts.
-  add_executable(test_effect_connection test/effect_connection.cpp)
-  target_link_libraries(test_effect_connection synthizer)
-
-  add_executable(test_generation_thread test/generation_thread.cpp)
-  target_link_libraries(test_generation_thread synthizer)
-  add_test(NAME generation_thread COMMAND test_generation_thread)
-
-  add_executable(test_double_refcount test/double_refcount.c)
-  target_link_libraries(test_double_refcount synthizer)
-  add_test(NAME double_refcount COMMAND test_double_refcount)
-
-  add_executable(test_property_automation_timeline test/property_automation_timeline.cpp)
-  target_link_libraries(test_property_automation_timeline synthizer)
-  add_test(NAME property_automation_timeline COMMAND test_property_automation_timeline)
-
-  add_executable(test_seeking test/seeking.cpp)
+  add_executable(test_seeking test/interactive/seeking.cpp)
   target_link_libraries(test_seeking synthizer)
 
-  add_executable(test_fast_sine_accuracy test/fast_sine_accuracy.cpp)
+  add_executable(test_fast_sine_accuracy test/interactive/fast_sine_accuracy.cpp)
   target_link_libraries(test_fast_sine_accuracy synthizer)
+
+  FetchContent_MakeAvailable(benchmark catch2)
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+  INCLUDE(Catch)
+
+  # Set up benchmarks for things we can benchmark.
+  #
+  # Unfortunately Synthizer's state is too global for us to do this reliably until we pull the math out to a library,
+  # but we can at least group some things under Google's benchmarking library which is better than nothing.
+
+  # Apparently we have to do this globally because CMake won't let us set a define for a subdirectory. Without it
+  # google/benchmark wants gtest.
+  set(BENCHMARK_ENABLE_TESTING OFF)
+
+  add_executable(gbench
+    benchmarks/gbench/block_buffer_cache.cpp
+    benchmarks/gbench/hrtf.cpp
+    benchmarks/gbench/main.cpp
+    benchmarks/gbench/property_write.cpp
+    benchmarks/gbench/standard_setup.cpp
+  )
+  target_link_libraries(gbench synthizer benchmark::benchmark)
+  set_property(TARGET gbench PROPERTY CXX_STANDARD 17)
+
+  FetchContent_MakeAvailable(benchmark catch2)
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+  INCLUDE(Catch)
+
+  add_executable(tests
+    test/block_delay_line.cpp
+    test/buffer_generator.cpp
+    test/delay_line.cpp
+    test/double_refcount.cpp
+    test/effect_connection.cpp
+    test/generation_thread.cpp
+    test/latch.cpp
+    test/main.cpp
+    test/math.cpp
+    test/mod_pointer.cpp
+    test/property_automation_timeline.cpp
+    test/random_float.cpp
+    test/sse2_horizontal_sum.cpp
+    test/verify_properties.cpp
+  )
+  target_link_libraries(tests PRIVATE Catch2::Catch2 synthizer)
+  target_include_directories(tests PRIVATE $<TARGET_PROPERTY:wdl_objlib,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_compile_definitions(tests PRIVATE WDL_RESAMPLE_TYPE=float)
+  if (WIN32)
+    # Don't let MSVC define min and max from windows.h.
+    target_compile_definitions(tests PRIVATE NOMINMAX)
+  endif()
+
+
+  catch_discover_tests(tests)
+
 endif()
 
 install(

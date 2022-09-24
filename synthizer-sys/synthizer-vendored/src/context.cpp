@@ -12,7 +12,7 @@
 #include "synthizer/effects/global_effect.hpp"
 #include "synthizer/logging.hpp"
 #include "synthizer/property_automation_timeline.hpp"
-#include "synthizer/sources.hpp"
+#include "synthizer/source.hpp"
 #include "synthizer/spatialization_math.hpp"
 #include "synthizer/types.hpp"
 #include "synthizer/vector_helpers.hpp"
@@ -31,8 +31,6 @@ Context::Context() : BaseObject(nullptr) {}
 
 void Context::initContext(bool is_headless) {
   std::weak_ptr<Context> ctx_weak = this->getContext();
-
-  this->source_panners = createPannerBank();
 
   this->headless = is_headless;
   if (headless) {
@@ -77,7 +75,7 @@ void Context::shutdown() {
   }
   this->drainDeletionQueues();
   /* We're shut down, just deinitialize all of them to kill strong references. */
-  this->command_queue.processAll([](auto &cmd) { cmd.deinitialize(); });
+  this->command_queue.process([](auto &cmd) { cmd.deinitialize(); }, SIZE_MAX);
 }
 
 void Context::cDelete() {
@@ -128,8 +126,19 @@ void Context::registerGlobalEffect(const std::shared_ptr<GlobalEffect> &effect) 
       true, [this](auto &effect) { this->global_effects.push_back(effect); }, effect);
 }
 
-std::shared_ptr<PannerLane> Context::allocateSourcePannerLane(enum SYZ_PANNER_STRATEGY strategy) {
-  return this->source_panners->allocateLane(strategy);
+void logForClipping(unsigned int channels, float *destination) {
+  unsigned int clips = 0;
+  unsigned int length = channels * config::BLOCK_SIZE;
+
+  for (unsigned int i = 0; i < length; i++) {
+    if (fabs(destination[i]) > 1.0) {
+      clips += 1;
+    }
+  }
+
+  if (clips != 0) {
+    logDebug("This block clipped for %u out of %u samples (%f percent)", clips, length, clips / (double)length * 100.0);
+  }
 }
 
 void Context::generateAudio(unsigned int channels, float *destination) {
@@ -176,12 +185,10 @@ void Context::generateAudio(unsigned int channels, float *destination) {
           continue;
         }
         s->tickAutomation();
-        s->run();
+        s->run(channels, destination);
         i++;
       }
     }
-
-    this->source_panners->run(channels, destination);
 
     weak_vector::iterate_removing(this->global_effects, [&](auto &e) { e->run(channels, this->getDirectBuffer()); });
     this->getRouter()->finishBlock();
@@ -229,20 +236,26 @@ void Context::generateAudio(unsigned int channels, float *destination) {
     });
 
     this->block_time.fetch_add(1, std::memory_order_relaxed);
+  } catch (std::exception &e) {
+    logError("Got an exception in the audio callback: %s", e.what());
   } catch (...) {
-    logError("Got an exception in the audio callback");
+    logError("Got an unknown exception in the audio callback");
   }
+
+  logForClipping(channels, destination);
 }
 
 void Context::runCommands() {
-  this->command_queue.processAll([&](auto &cmd) {
-    try {
-      auto deinit = AtScopeExit([&]() { cmd.deinitialize(); });
-      cmd.execute();
-    } catch (std::exception &e) {
-      logError("Got exception applying property write: %s", e.what());
-    }
-  });
+  this->command_queue.process(
+      [&](auto &cmd) {
+        try {
+          auto deinit = AtScopeExit([&]() { cmd.deinitialize(); });
+          cmd.execute();
+        } catch (std::exception &e) {
+          logError("Got exception applying property write: %s", e.what());
+        }
+      },
+      config::MAX_COMMANDS_PER_TICK);
 }
 
 void Context::enqueueDeletionRecord(DeletionCallback cb, void *arg) {

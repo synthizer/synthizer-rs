@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <cstdlib>
 
 namespace synthizer {
@@ -52,14 +53,13 @@ const int HRTF_MAX_ITD = 64;
  * */
 const int PANNER_MAX_LANES = 4;
 
-/*
- * When storing buffers, how big should each page be? See buffer.hpp for explanation of how buffers work.
+/**
+ * When decoding buffers, how many samples should we try to decode at once?
  *
- * Powers of 2 are best for performance.
- *
- * Note: the primary trade-off here isn't memory fragmentation, it's speed at the boundaries.
+ * Higher values decode faster, but there can be up to this number of frames of wasted/unused memory at the end of the
+ * buffer.
  * */
-const std::size_t BUFFER_CHUNK_SIZE = (1 << 14);
+const std::size_t BUFFER_DECODE_CHUNK_SIZE = (1 << 14);
 
 /*
  * maximum size of a command.
@@ -67,6 +67,22 @@ const std::size_t BUFFER_CHUNK_SIZE = (1 << 14);
  * This is used to make the MpscRing entirely inline by using aligned_storage.
  * */
 const std::size_t MAX_COMMAND_SIZE = 128;
+
+/**
+ * Maximum number of commands to process per tick of a context.
+ * */
+const std::size_t MAX_COMMANDS_PER_TICK = 10000;
+
+/**
+ * Control the precision of the BufferGenerator pitch bend.
+ *
+ * This value is used to allow computing fractional BufferGenerator positions using only integers.  Larger values allow
+ * for more individual discretized steps in the pitch bend.  We use 64-bit unsigned integers for this arithmetic.  As a
+ * rule of thumb, there are `BUFFER_POS_FACTOR` steps between 0 and 1, not counting the 0th value itself.
+ *
+ * This value must be a power of 2 for correct functioning of the library.
+ * */
+constexpr std::uint64_t BUFFER_POS_MULTIPLIER = 1 << 14;
 
 } // namespace config
 } // namespace synthizer

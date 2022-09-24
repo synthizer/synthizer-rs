@@ -6,10 +6,9 @@
 #include "synthizer/error.hpp"
 #include "synthizer/trylock.hpp"
 
-#include "plf_colony.h"
-
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <map>
@@ -85,12 +84,12 @@ public:
     deferredFree((void *)p);
   }
 
-  bool operator==(const DeferredAllocator &other) { return true; }
+  bool operator==(const DeferredAllocator &) { return true; }
 
-  bool operator!=(const DeferredAllocator &other) { return false; }
+  bool operator!=(const DeferredAllocator &) { return false; }
 };
 
-template <typename T> bool operator==(const DeferredAllocator<T> &a, const DeferredAllocator<T> &b) { return true; }
+template <typename T> bool operator==(const DeferredAllocator<T> &, const DeferredAllocator<T> &) { return true; }
 
 /*
  * Typedefs for std and plf types that are deferred.
@@ -105,20 +104,17 @@ using deferred_set = std::set<Key, Compare, DeferredAllocator<Key>>;
 template <typename K, typename V, typename HASH = std::hash<K>, typename KE = std::equal_to<K>>
 using deferred_unordered_map = std::unordered_map<K, V, HASH, KE, DeferredAllocator<std::pair<const K, V>>>;
 
-template <typename T, typename SKIPFIELD_T = unsigned short>
-using deferred_colony = plf::colony<T, DeferredAllocator<T>, SKIPFIELD_T>;
-
 /*
  * makes shared_ptrs with the shared_ptr constructor, but injects a DeferredAllocator.
  * */
-template <typename T, typename... ARGS> std::shared_ptr<T> sharedPtrDeferred(ARGS &&... args) {
+template <typename T, typename... ARGS> std::shared_ptr<T> sharedPtrDeferred(ARGS &&...args) {
   return std::shared_ptr<T>(std::forward<ARGS>(args)..., DeferredAllocator<T>());
 }
 
 /*
  * Like std::allocate_shared but doesn't make us specify the allocator types.
  * */
-template <typename T, typename... ARGS> std::shared_ptr<T> allocateSharedDeferred(ARGS &&... args) {
+template <typename T, typename... ARGS> std::shared_ptr<T> allocateSharedDeferred(ARGS &&...args) {
   return std::allocate_shared<T, DeferredAllocator<T>, ARGS...>(DeferredAllocator<T>(), std::forward<ARGS>(args)...);
 }
 

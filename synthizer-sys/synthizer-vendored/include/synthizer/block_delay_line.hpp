@@ -7,6 +7,7 @@
 
 #include "synthizer/compiler_specifics.hpp"
 #include "synthizer/config.hpp"
+#include "synthizer/mod_pointer.hpp"
 #include "synthizer/types.hpp"
 
 namespace synthizer {
@@ -40,6 +41,8 @@ template <unsigned int LANES, unsigned int SIZE_IN_BLOCKS> class BlockDelayLine 
   std::array<float, config::BLOCK_SIZE *SIZE_IN_BLOCKS *LANES> data = {0.0f};
 
 public:
+  static constexpr std::size_t SIZE_IN_FRAMES = SIZE_IN_BLOCKS * config::BLOCK_SIZE;
+
   BlockDelayLine() {}
 
   static unsigned int modulusIndexProducer(unsigned int delay, unsigned int current_frame) {
@@ -122,6 +125,28 @@ public:
     return ret;
   }
 
+  void incrementBlock() { this->current_frame = (this->current_frame + config::BLOCK_SIZE) % SIZE_IN_FRAMES; }
+
+  /**
+   * Get a ModPointer to manipulate the buffer for the specified delay, proceeding until the end of the current
+   * block.  Suitable for things which need to both read and write the line at the same time.
+   *
+   * The returned pointer points at the current block.
+   *
+   * The delay must be less than the length of the line.
+   * */
+  StaticModPointer<float, SIZE_IN_FRAMES * LANES> getModPointer(std::size_t delay) {
+    assert(delay < SIZE_IN_FRAMES);
+    std::size_t start_frame = (SIZE_IN_FRAMES + this->current_frame - delay) % SIZE_IN_FRAMES;
+    std::size_t len_frames = delay + config::BLOCK_SIZE;
+
+    auto ptr =
+        createStaticModPointer<float, SIZE_IN_FRAMES * LANES>(&this->data[0], start_frame * LANES, len_frames * LANES);
+    // This is at the beginning of the slice, so move it forward by the delay.
+    std::visit([=](auto &x) { x += delay * LANES; }, ptr);
+    return ptr;
+  }
+
   void clearChannel(unsigned int channel) {
     assert(channel < LANES);
     for (unsigned int i = channel; i < this->data.size(); i += LANES) {
@@ -136,7 +161,7 @@ private:
   FLATTENED void runLoopPrivSplit(unsigned int max_delay, unsigned first, F1 &first_c, unsigned int second,
                                   F2 &second_c) {
     assert(first + second == config::BLOCK_SIZE);
-    bool needs_modulus = max_delay > this->current_frame;
+    bool needs_modulus = max_delay >= this->current_frame;
 
     if (needs_modulus) {
       Reader<modulusIndexProducer, WRITE_ENABLED> r{this->data, this->current_frame};

@@ -6,7 +6,6 @@
 #include "synthizer/events.hpp"
 #include "synthizer/fade_driver.hpp"
 #include "synthizer/mpsc_ring.hpp"
-#include "synthizer/panner_bank.hpp"
 #include "synthizer/pausable.hpp"
 #include "synthizer/priority_queue.hpp"
 #include "synthizer/property_internals.hpp"
@@ -82,6 +81,7 @@ public:
 
   std::shared_ptr<Context> getContext() override;
   Context *getContextRaw() override { return this; }
+  const Context *getContextRaw() const override { return this; }
 
   int getObjectType() override;
 
@@ -97,7 +97,7 @@ public:
    * Call a callable in the audio thread. Doesn't wait for completion. Returns false
    * if there was no room in the queue.
    * */
-  template <typename CB, typename... ARGS> bool enqueueCallbackCommandNonblocking(CB &&callback, ARGS &&... args) {
+  template <typename CB, typename... ARGS> bool enqueueCallbackCommandNonblocking(CB &&callback, ARGS &&...args) {
     if (this->headless) {
       callback(args...);
       return true;
@@ -118,14 +118,14 @@ public:
    * In practice, code goes through this one instead, and we rely on knowing that there's a reasonable size for the
    * command queue that will reasonably ensure no one ever spins for practical applications.
    * */
-  template <typename CB, typename... ARGS> void enqueueCallbackCommand(CB &&callback, ARGS &&... args) {
+  template <typename CB, typename... ARGS> void enqueueCallbackCommand(CB &&callback, ARGS &&...args) {
     while (this->enqueueCallbackCommandNonblocking(callback, args...) == false) {
       std::this_thread::yield();
     }
   }
 
   template <typename CB, typename... ARGS>
-  bool enqueueReferencingCallbackCommandNonblocking(bool short_circuit, CB &&callback, ARGS &&... args) {
+  bool enqueueReferencingCallbackCommandNonblocking(bool short_circuit, CB &&callback, ARGS &&...args) {
     if (this->headless) {
       callback(args...);
       return true;
@@ -148,7 +148,7 @@ public:
     }
   }
 
-  template <typename T, typename... ARGS> std::shared_ptr<T> createObject(ARGS &&... args) {
+  template <typename T, typename... ARGS> std::shared_ptr<T> createObject(ARGS &&...args) {
     auto obj = new T(this->getContext(), args...);
     auto ret = sharedPtrDeferred<T>(obj, [](T *ptr) {
       auto ctx = ptr->getContextRaw();
@@ -173,7 +173,7 @@ public:
    *
    * This is used for crossfading and other applications.
    * */
-  unsigned int getBlockTime() { return this->block_time.load(std::memory_order_relaxed); }
+  unsigned int getBlockTime() const { return this->block_time.load(std::memory_order_relaxed); }
 
   /*
    * Helpers for the C API. to set properties in the context's thread.
@@ -209,9 +209,6 @@ public:
    * */
   float *getDirectBuffer() { return &this->direct_buffer[0]; }
 
-  /* Allocate a panner lane intended to be used by a source. */
-  std::shared_ptr<PannerLane> allocateSourcePannerLane(enum SYZ_PANNER_STRATEGY strategy);
-
   router::Router *getRouter() { return &this->router; }
 
   /* materialize distance params from the properties. */
@@ -229,7 +226,7 @@ public:
    *
    * How this works is you pass it a callback which takes a pointer to an EventBuilder, you build your event, then the
    * context dispatches it on your behalf. The point of this function is that the callback/event building can be
-   * entirely avoided if events are disabled; in that cse, your callback will not be called.
+   * entirely avoided if events are disabled; in that case, your callback will not be called.
    * */
   template <typename CB> void sendEvent(CB &&callback) {
     if (this->event_sender.isEnabled() == false) {
@@ -313,7 +310,7 @@ private:
   /* Used by shutdown and the destructor only. Not safe to call elsewhere. */
   void drainDeletionQueues();
 
-  MpscRing<Command, 10000> command_queue;
+  MpscRing<Command, 32768> command_queue;
   template <typename T> void propertySetter(const std::shared_ptr<BaseObject> &obj, int property, const T &value);
 
   std::atomic<unsigned int> block_time = 0;
@@ -325,15 +322,9 @@ private:
 
   /* The key is a raw pointer for easy lookup. */
   deferred_unordered_map<void *, std::weak_ptr<Source>> sources;
-  std::shared_ptr<AbstractPannerBank> source_panners = nullptr;
 
   /* Effects to run. */
   deferred_vector<std::weak_ptr<GlobalEffect>> global_effects;
-
-  /* Parameters of the 3D environment: listener orientation/position, library-wide defaults for distance models, etc. */
-  std::array<double, 3> position{{0, 0, 0}};
-  /* Default to facing positive y with positive x as east and positive z as up. */
-  std::array<double, 6> orientation{{0, 1, 0, 0, 0, 1}};
 
   /* Effects support. */
   router::Router router{};
