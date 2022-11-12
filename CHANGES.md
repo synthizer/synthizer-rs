@@ -1,7 +1,10 @@
+# 0.5.3 (2022-11-12)
+
+- Pull in Synthizer 0.111
+
 # 0.5.2 (2022-09-24)
 
 - Bind syz_routingRemoveAllRoutes
-
 - Upgrade Synthizer to 0.11.9
 
 # 0.5.1 (2022-05-28)
