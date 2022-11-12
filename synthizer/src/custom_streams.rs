@@ -114,7 +114,7 @@ extern "C" fn destroy_cb<T>(userdata: *mut c_void) {
 /// Used as part of [StreamHandle] consumption.
 fn drop_cb<T>(ptr: *mut c_void) {
     unsafe {
-        Box::<T>::from_raw(ptr as *mut T);
+        std::mem::drop(Box::<T>::from_raw(ptr as *mut T));
     }
 }
 
