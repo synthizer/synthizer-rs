@@ -1,3 +1,7 @@
+# 0.5.4 (2022-12-16)
+
+- Bump synthizer to 0.11.12
+
 # 0.5.3 (2022-11-12)
 
 - Pull in Synthizer 0.111
