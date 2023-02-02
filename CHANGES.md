@@ -1,3 +1,6 @@
+# 0.5.5 (2023-02-02)
+
+- Make it possible to pause echo and reverb]
 # 0.5.4 (2022-12-16)
 
 - Bump synthizer to 0.11.12
