@@ -32,6 +32,7 @@ downcast!(Buffer, Handle);
 
 downcast!(Generator, Handle);
 downcast!(BufferGenerator, Generator, Handle);
+downcast!(FastSineBankGenerator, Generator, Handle);
 downcast!(NoiseGenerator, Generator, Handle);
 downcast!(StreamingGenerator, Generator, Handle);
 
