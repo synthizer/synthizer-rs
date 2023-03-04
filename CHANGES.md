@@ -1,6 +1,12 @@
+# 0.5.6 (2023-03-04)
+
+- Roll back pausable effects.  This never worked because it wasn't implemented on the C side.
+- Upgrade Synthizer to 0.11.13
+
 # 0.5.5 (2023-02-02)
 
 - Make it possible to pause echo and reverb]
+
 # 0.5.4 (2022-12-16)
 
 - Bump synthizer to 0.11.12
