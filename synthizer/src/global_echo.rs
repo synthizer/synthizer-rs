@@ -41,7 +41,6 @@ impl GlobalEcho {
     effect_properties!();
 
     object_common!();
-    pausable_common!();
 }
 
 handle_traits!(GlobalEcho);

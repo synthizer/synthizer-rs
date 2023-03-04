@@ -53,7 +53,6 @@ impl GlobalFdnReverb {
     effect_common!();
 
     object_common!();
-    pausable_common!();
 }
 
 handle_traits!(GlobalFdnReverb);
